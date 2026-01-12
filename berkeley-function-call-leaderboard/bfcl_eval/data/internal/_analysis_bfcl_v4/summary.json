@@ -1,0 +1,14 @@
+{
+  "rows_total": 8279,
+  "unique_conversations_base_id": 3556,
+  "unique_source_files": 16,
+  "task_type_counts": {
+    "multi_turn": 4625,
+    "single_turn": 3654
+  },
+  "rows_with_multiple_candidate_tools": 6544,
+  "rows_with_empty_tools": 0,
+  "rows_with_empty_messages": 0,
+  "rows_with_missing_gt_tool_name": 0,
+  "rows_with_gt_args_present": 7849
+}

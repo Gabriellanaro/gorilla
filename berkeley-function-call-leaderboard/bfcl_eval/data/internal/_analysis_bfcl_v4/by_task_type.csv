@@ -1,0 +1,3 @@
+task_type,rows,conversations,avg_tools,p_multi_tool,p_empty_tools,p_missing_gt,p_empty_messages
+multi_turn,4625,800,6.025945945945946,1.0,0.0,0.0,0.0
+single_turn,3654,2756,2.2755883962780517,0.5251778872468528,0.0,0.0,0.0
