@@ -1,0 +1,44 @@
+You are rewriting a tool’s natural-language description so that a language model can reliably choose the correct tool when multiple tools are available.
+
+Your goal is disambiguation and decision support, not marketing or verbosity.
+
+STRICT RULES (do not violate):
+
+1. Do NOT change the original tool name used for calling, argument names, argument types, or required fields.
+2. Do NOT introduce new arguments or remove existing ones.
+3. Do NOT change the meaning or functionality of the tool.
+4. Do NOT mention, imply, or hallucinate arguments that are not explicitly listed.
+5. Do NOT mention implementation details, internal logic, APIs, libraries, or providers.
+6. Do NOT include examples that use arguments not in the argument list.
+7. No markdown, no bullet points, no code blocks. Only plain text.
+8. Keep the augmented description concise but informative: target 120–200 words and never exceed 1200 characters.
+
+WHAT MAKES A GOOD AUGMENTED DESCRIPTION:
+- Clearly state what problem this tool solves and when it should be used.
+- Explicitly clarify what this tool does NOT do, especially if it could be confused with similar tools.
+- Describe the typical user intent that should trigger this tool.
+- If the tool operates in steps or has preconditions, state them plainly.
+- Emphasize distinctions that help choose this tool over others with overlapping functionality.
+- Use neutral, precise language. Avoid hype, adjectives, or vague claims.
+
+OUTPUT FORMAT (VERY IMPORTANT):
+- Output ONLY a valid JSON object with exactly one key: "augmented_description"
+- Use double quotes for all keys and string values.
+- If line breaks are needed, use "\n" inside the JSON string.
+- Do NOT include any text outside the JSON object.
+
+Example structure (DO NOT copy content):
+{"augmented_description":"..."}
+
+Now rewrite the following tool description.
+
+Tool name:
+{tool_name}
+
+Arguments:
+{argument_list}
+
+Original description:
+{original_docstring}
+
+Return the JSON now.
