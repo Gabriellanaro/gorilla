@@ -56,6 +56,12 @@ For model names containing `{...}`, multiple versions are available. For example
 | GLM-4.6                                | Function Calling | Zhipu AI       | glm-4.6-FC                                                  |
 | GoGoAgent                              | Prompt           | BitAgent       | BitAgent/GoGoAgent                                          |
 | Gorilla-OpenFunctions-v2               | Function Calling | Gorilla LLM    | gorilla-openfunctions-v2                                    |
+| Azure GPT-5.1-responses                | Function Calling | Azure OpenAI   | azure-gpt-5.1-responses-FC                                  |
+| Azure GPT-5.1-responses                | Prompt           | Azure OpenAI   | azure-gpt-5.1-responses                                     |
+| Azure GPT-4.1-responses                | Function Calling | Azure OpenAI   | azure-gpt-4.1-responses-FC                                  |
+| Azure GPT-4.1-responses                | Prompt           | Azure OpenAI   | azure-gpt-4.1-responses                                     |
+| Azure GPT-4o                           | Function Calling | Azure OpenAI   | azure-gpt-4o-FC                                             |
+| Azure GPT-4o                           | Prompt           | Azure OpenAI   | azure-gpt-4o                                                |
 | GPT-4.1-2025-04-14                     | Function Calling | OpenAI         | gpt-4.1-2025-04-14-FC                                       |
 | GPT-4.1-2025-04-14                     | Prompt           | OpenAI         | gpt-4.1-2025-04-14                                          |
 | GPT-4.1-mini-2025-04-14                | Function Calling | OpenAI         | gpt-4.1-mini-2025-04-14-FC                                  |

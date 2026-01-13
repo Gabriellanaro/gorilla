@@ -41,6 +41,13 @@ def get_args():
     parser.add_argument("--gpu-memory-utilization", default=0.9, type=float)
     parser.add_argument("--result-dir", default=None, type=str)
     parser.add_argument("--run-ids", action="store_true", default=False)
+    parser.add_argument(
+        "--tool-desc",
+        type=str,
+        default="original",
+        choices=["original", "augmented"],
+        help="Select tool description source when building prompts.",
+    )
     parser.add_argument("--allow-overwrite", "-o", action="store_true", default=False)
     parser.add_argument(
         "--skip-server-setup",
@@ -71,17 +78,19 @@ def build_handler(model_name, temperature):
     return handler
 
 
-def get_involved_test_entries(test_category_args, run_ids):
+def get_involved_test_entries(test_category_args, run_ids, tool_desc_mode: str):
     all_test_categories, all_test_entries_involved = [], []
     if run_ids:
         all_test_categories, all_test_entries_involved = load_test_entries_from_id_file(
-            TEST_IDS_TO_GENERATE_PATH
+            TEST_IDS_TO_GENERATE_PATH, tool_desc_mode=tool_desc_mode
         )
 
     else:
         all_test_categories = parse_test_category_argument(test_category_args)
         for test_category in all_test_categories:
-            all_test_entries_involved.extend(load_dataset_entry(test_category))
+            all_test_entries_involved.extend(
+                load_dataset_entry(test_category, tool_desc_mode=tool_desc_mode)
+            )
 
     return (
         all_test_categories,
@@ -352,7 +361,7 @@ def main(args):
     (
         all_test_categories,
         all_test_entries_involved,
-    ) = get_involved_test_entries(args.test_category, args.run_ids)
+    ) = get_involved_test_entries(args.test_category, args.run_ids, args.tool_desc)
 
     for model_name in args.model:
         if model_name not in MODEL_CONFIG_MAPPING:

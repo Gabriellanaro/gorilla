@@ -1,4 +1,4 @@
-You are rewriting a tool’s natural-language description so that a language model can reliably choose the correct tool when multiple tools are available.
+You are rewriting a tool's natural-language description so that a language model can reliably choose the correct tool when multiple tools are available.
 
 Your goal is disambiguation and decision support, not marketing or verbosity.
 
@@ -11,7 +11,8 @@ STRICT RULES (do not violate):
 5. Do NOT mention implementation details, internal logic, APIs, libraries, or providers.
 6. Do NOT include examples that use arguments not in the argument list.
 7. No markdown, no bullet points, no code blocks. Only plain text.
-8. Keep the augmented description concise but informative: target 120–200 words and never exceed 1200 characters.
+8. Keep the augmented description concise but informative: target 120-200 words and never exceed 1200 characters.
+9. Use ASCII characters only. Avoid curly quotes, em dashes, and any non-ASCII symbols.
 
 WHAT MAKES A GOOD AUGMENTED DESCRIPTION:
 - Clearly state what problem this tool solves and when it should be used.

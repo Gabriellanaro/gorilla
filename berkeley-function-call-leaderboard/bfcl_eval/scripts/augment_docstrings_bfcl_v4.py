@@ -351,7 +351,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "--output-json",
         default="bfcl_eval/data/internal/bfcl_v4_tool_catalogue_augmented.jsonl",
     )
-    parser.add_argument("--model", default="gpt-5.1-responses")
+    parser.add_argument("--model", default="gpt-4o")
     parser.add_argument(
         "--prompt-file",
         default="bfcl_eval\data\prompts\docstring_rewriter.txt",

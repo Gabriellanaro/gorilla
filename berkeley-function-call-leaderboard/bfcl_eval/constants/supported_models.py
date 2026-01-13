@@ -14,6 +14,12 @@
 
 SUPPORTED_MODELS = [
     "gorilla-openfunctions-v2",
+    "azure-gpt-5.1-responses-FC",
+    "azure-gpt-5.1-responses",
+    "azure-gpt-4.1-responses-FC",
+    "azure-gpt-4.1-responses",
+    "azure-gpt-4o-FC",
+    "azure-gpt-4o",
     "DeepSeek-V3.2-Exp",
     "DeepSeek-V3.2-Exp-FC",
     "DeepSeek-V3.2-Exp-thinking",

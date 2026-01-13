@@ -20,6 +20,7 @@ from bfcl_eval.constants.executable_backend_config import (
 
 _FILE_LOCK_REGISTRY: dict[str, FileLock] = {}
 _FILE_LOCK_REGISTRY_LOCK = Lock()
+_AUGMENTED_TOOL_DESC_CACHE: dict[str, str] | None = None
 
 
 def _get_file_lock(filepath: str) -> FileLock:
@@ -169,7 +170,9 @@ def parse_test_category_argument(test_category_args: list[str]) -> list[str]:
     return sorted(list(test_name_total))
 
 
-def load_test_entries_from_id_file(id_file_path: Path) -> tuple[list[str], list[dict]]:
+def load_test_entries_from_id_file(
+    id_file_path: Path, tool_desc_mode: str = "original"
+) -> tuple[list[str], list[dict]]:
     """
     Helper function to load the test entries from the id file (e.g. `test_case_ids_to_generate.json.example`)
     """
@@ -184,7 +187,11 @@ def load_test_entries_from_id_file(id_file_path: Path) -> tuple[list[str], list[
             continue
         # Extend the entries list with only those whose id is present in the ID list
         entries.extend(
-            [entry for entry in load_dataset_entry(category) if entry["id"] in test_ids]
+            [
+                entry
+                for entry in load_dataset_entry(category, tool_desc_mode=tool_desc_mode)
+                if entry["id"] in test_ids
+            ]
         )
         categories.append(category)
 
@@ -356,7 +363,7 @@ def load_file(file_path, sort_by_id: bool = False, use_lock: bool = True) -> lis
     result = []
 
     def _load_entries(input_path: str) -> None:
-        with open(input_path) as f:
+        with open(input_path, "r", encoding="utf-8") as f:
             file = f.readlines()
             for line in file:
                 content = json.loads(line)
@@ -403,12 +410,14 @@ def load_dataset_entry(
     test_category: str,
     include_prereq: bool = True,
     include_language_specific_hint: bool = True,
+    tool_desc_mode: str = "original",
 ) -> list[dict]:
     """
     This function retrieves the dataset entry for a given test category.
     The input should not be a test category goup, but a specific test category.
     If `contain_prereq` is True, it will include the pre-requisite entries for the memory test categories.
     If `include_language_specific_hint` is True, it will include the language-specific hint for the function description (for Java, JavaScript, and Python).
+    If `tool_desc_mode` is "augmented", it will replace tool descriptions using the augmented tool catalogue.
     """
     if is_format_sensitivity(test_category):
         # Format sensitivity categories
@@ -436,10 +445,57 @@ def load_dataset_entry(
     all_entries = process_agentic_test_case(all_entries)
     all_entries = populate_test_cases_with_predefined_functions(all_entries)
 
+    if tool_desc_mode == "augmented":
+        all_entries = apply_augmented_tool_descriptions(all_entries)
+    elif tool_desc_mode != "original":
+        raise ValueError(f"Unsupported tool_desc_mode: {tool_desc_mode}")
+
     if include_language_specific_hint:
         all_entries = add_language_specific_hint_to_function_doc(all_entries)
 
     return all_entries
+
+
+def load_augmented_tool_descriptions() -> dict[str, str]:
+    global _AUGMENTED_TOOL_DESC_CACHE
+    if _AUGMENTED_TOOL_DESC_CACHE is not None:
+        return _AUGMENTED_TOOL_DESC_CACHE
+
+    augmented_path = PROMPT_PATH / "internal" / "bfcl_v4_tool_catalogue_augmented.jsonl"
+    if not augmented_path.exists():
+        raise FileNotFoundError(
+            f"Augmented tool catalogue not found: {augmented_path}"
+        )
+
+    mapping: dict[str, str] = {}
+    with open(augmented_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            entry = json.loads(line)
+            tool_name = entry.get("tool_name")
+            aug_description = entry.get("aug_description")
+            if tool_name and aug_description:
+                mapping[tool_name] = aug_description
+
+    _AUGMENTED_TOOL_DESC_CACHE = mapping
+    return mapping
+
+
+def apply_augmented_tool_descriptions(test_cases: list[dict]) -> list[dict]:
+    mapping = load_augmented_tool_descriptions()
+
+    for entry in test_cases:
+        functions = entry.get("function")
+        if not functions:
+            continue
+        for func in functions:
+            tool_name = func.get("name")
+            if tool_name in mapping:
+                func["description"] = mapping[tool_name]
+
+    return test_cases
 
 
 def load_ground_truth_entry(test_category: str) -> list[dict]:
