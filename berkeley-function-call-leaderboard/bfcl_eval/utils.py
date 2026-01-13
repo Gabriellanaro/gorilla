@@ -421,7 +421,7 @@ def load_dataset_entry(
     """
     if is_format_sensitivity(test_category):
         # Format sensitivity categories
-        all_entries = load_format_sensitivity_test_cases()
+        all_entries = load_format_sensitivity_test_cases(tool_desc_mode=tool_desc_mode)
 
     elif is_web_search(test_category):
         # Web search categories
@@ -934,12 +934,14 @@ def populate_initial_settings_for_web_search_test_cases(
 #### Utils for Format Sensitivity ####
 
 
-def load_format_sensitivity_test_cases() -> list[dict]:
+def load_format_sensitivity_test_cases(
+    tool_desc_mode: str = "original",
+) -> list[dict]:
     """
     Loads all the format sensitivity test cases. 26 configs x 200 test cases = 5200 test cases.
     """
     _, all_test_entries_involved = load_test_entries_from_id_file(
-        FORMAT_SENSITIVITY_IDS_PATH
+        FORMAT_SENSITIVITY_IDS_PATH, tool_desc_mode=tool_desc_mode
     )
     all_configs = get_all_format_sensitivity_configs()
 

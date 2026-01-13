@@ -148,10 +148,21 @@ def generate(
         "--run-ids",
         help="If true, also run the test entry mentioned in the test_case_ids_to_generate.json file, in addition to the --test_category argument.",
     ),
+    tool_desc: str = typer.Option(
+        "original",
+        "--tool-desc",
+        help="Select tool description source when building prompts.",
+        show_default=True,
+        case_sensitive=False,
+        rich_help_panel="Prompt options",
+    ),
 ):
     """
     Generate the LLM response for one or more models on a test-category (same as openfunctions_evaluation.py).
     """
+
+    if tool_desc.lower() == "augmented" and str(result_dir) == str(RESULT_PATH):
+        result_dir = "result_augmented"
 
     args = SimpleNamespace(
         model=model,
@@ -168,6 +179,7 @@ def generate(
         result_dir=result_dir,
         allow_overwrite=allow_overwrite,
         run_ids=run_ids,
+        tool_desc=tool_desc,
     )
     load_dotenv(dotenv_path=DOTENV_PATH, verbose=True, override=True)  # Load the .env file
     generation_main(args)
@@ -256,12 +268,26 @@ def evaluate(
         "--partial-eval",
         help="Run evaluation on a partial set of benchmark entries (eg. entries present in the model result files) without raising for missing IDs.",
     ),
+    tool_desc: str = typer.Option(
+        "original",
+        "--tool-desc",
+        help="Select tool description source used during generation to resolve result/score paths.",
+        show_default=True,
+        case_sensitive=False,
+    ),
 ):
     """
     Evaluate results from run of one or more models on a test-category (same as eval_runner.py).
     """
 
     load_dotenv(dotenv_path=DOTENV_PATH, verbose=True, override=True)  # Load the .env file
+
+    if tool_desc.lower() == "augmented":
+        if result_dir is None:
+            result_dir = "result_augmented"
+        if score_dir is None:
+            score_dir = "score_augmented"
+
     evaluation_main(model, test_category, result_dir, score_dir, partial_eval)
 
 
