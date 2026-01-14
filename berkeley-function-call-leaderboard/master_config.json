@@ -1,0 +1,27 @@
+{
+  "experiment_name": "bfcl_v4_desc_ab",
+  "model": "azure-gpt-4o-FC",
+  "test_categories": ["all"],
+  "notes": "Format sensitivity is skipped for FC models during generation.",
+  "conditions": [
+    {
+      "name": "orig_name",
+      "description": "orig_desc",
+      "tool_desc": "original",
+      "result_dir": "result",
+      "score_dir": "score"
+    },
+    {
+      "name": "aug_name",
+      "description": "aug_desc",
+      "tool_desc": "augmented",
+      "result_dir": "result_augmented",
+      "score_dir": "score_augmented"
+    }
+  ],
+  "azure": {
+    "endpoint_env": "AZURE_OPENAI_ENDPOINT",
+    "api_version_env": "AZURE_OPENAI_API_VERSION",
+    "auth": "entra_id_or_api_key"
+  }
+}

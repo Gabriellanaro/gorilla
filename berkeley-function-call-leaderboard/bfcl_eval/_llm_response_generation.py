@@ -1,4 +1,5 @@
 import argparse
+import json
 import heapq
 import multiprocessing as mp
 import os
@@ -6,9 +7,11 @@ import queue
 import shutil
 import threading
 import traceback
+import uuid
 from collections import defaultdict
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from copy import deepcopy
+from datetime import datetime, timezone
 
 from bfcl_eval.constants.eval_config import (
     PROJECT_ROOT,
@@ -389,7 +392,25 @@ def main(args):
     else:
         args.result_dir = RESULT_PATH
 
+    run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid.uuid4().hex[:8]}"
+
     for model_name in args.model:
+        model_name_dir = model_name.replace("/", "_")
+        model_result_dir = args.result_dir / model_name_dir
+        model_result_dir.mkdir(parents=True, exist_ok=True)
+        metadata_path = model_result_dir / "run_metadata.json"
+        run_metadata = {
+            "run_id": run_id,
+            "started_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "model": model_name,
+            "test_category": args.test_category,
+            "tool_desc": args.tool_desc,
+            "temperature": args.temperature,
+            "run_ids_mode": args.run_ids,
+        }
+        with open(metadata_path, "w", encoding="utf-8") as f:
+            json.dump(run_metadata, f, ensure_ascii=True, indent=2)
+
         test_cases_total = collect_test_cases(
             args,
             model_name,

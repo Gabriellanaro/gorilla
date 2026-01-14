@@ -125,9 +125,15 @@ def build_client() -> AzureOpenAI:
 
 # ---------------------- Rewriter ---------------------- #
 
-def render_user_content(tool_name: str, description: str) -> str:
+def render_user_content(tool_name: str, argument_list: str, description: str) -> str:
     desc = description.strip() or "No description provided."
-    return f"Tool name: {tool_name}\nOriginal description: {desc}"
+    args = argument_list.strip() or "No arguments provided."
+    return (
+        f"Callable tool name (MUST NOT CHANGE): {tool_name}\n"
+        f"Arguments:\n{args}\n"
+        f"Original description:\n{desc}"
+    )
+
 
 
 def extract_output_text(resp: Any) -> str:
@@ -169,11 +175,18 @@ def _json_from_text(text: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def validate_augmented_description(parsed: Dict[str, Any]) -> str:
+def validate_augmented_metadata(parsed: Dict[str, Any]) -> Tuple[str, str]:
+    aug_name = str(parsed.get("augmented_name") or "").strip()
     aug_desc = str(parsed.get("augmented_description") or "").strip()
+
+    # Hard safety truncation
+    if len(aug_name) > 60:
+        aug_name = aug_name[:60].rstrip()
     if len(aug_desc) > 7000:
         aug_desc = aug_desc[:7000].rstrip()
-    return aug_desc
+
+    return aug_name, aug_desc
+
 
 
 def rewrite_tool_once(
@@ -181,18 +194,21 @@ def rewrite_tool_once(
     model: str,
     system_prompt: str,
     tool_name: str,
+    argument_list: str,
     description: str,
     max_retries: int = 3,
     max_desc_chars: int = 1200,
     allow_backticks: bool = False,
-) -> Tuple[Optional[str], str, str]:
+) -> Tuple[Optional[str], Optional[str], str, str]:
+
     """
-    Returns (augmented_description | None, raw_model_output, parse_mode).
+    Returns (augmented_name | None, augmented_description | None, raw_model_output, parse_mode).
     """
-    user_content = render_user_content(tool_name, description)
+    user_content = render_user_content(tool_name, argument_list, description)
 
     last_text = ""
     last_reject_reason: Optional[str] = None
+    last_valid_aug_name: Optional[str] = None
     last_valid_aug_desc: Optional[str] = None
     parse_mode = "unknown"
 
@@ -205,16 +221,22 @@ def rewrite_tool_once(
             ],
         )
         last_text = extract_output_text(resp)
-
         parsed = _json_from_text(last_text)
-        if parsed is None or "augmented_description" not in parsed:
-            last_reject_reason = "non_json"
+        if parsed is None or ("augmented_description" not in parsed) or ("augmented_name" not in parsed):
+            last_reject_reason = "missing_keys" if parsed is not None else "non_json"
             if attempt < max_retries:
                 continue
             break
 
-        aug_desc = validate_augmented_description(parsed)
+        aug_name, aug_desc = validate_augmented_metadata(parsed)
         last_valid_aug_desc = aug_desc
+        last_valid_aug_name = aug_name
+
+        if not aug_name:
+            last_reject_reason = "empty_aug_name"
+            if attempt < max_retries:
+                continue
+            break
 
         reject_reason = is_rewrite_issue(
             aug_desc,
@@ -224,7 +246,7 @@ def rewrite_tool_once(
 
         if reject_reason is None:
             parse_mode = "json_ok"
-            return aug_desc, last_text, parse_mode
+            return aug_name, aug_desc, last_text, parse_mode
 
         last_reject_reason = reject_reason
         if attempt < max_retries:
@@ -234,10 +256,12 @@ def rewrite_tool_once(
     if last_reject_reason == "too_long" and last_valid_aug_desc:
         truncated = last_valid_aug_desc[:max_desc_chars].rstrip()
         parse_mode = "json_truncated"
-        return truncated, last_text, parse_mode
+        return last_valid_aug_name or None, truncated, last_text, parse_mode
+
 
     parse_mode = "parse_failed"
-    return None, last_text, parse_mode
+    return None, None, last_text, parse_mode
+
 
 
 # ---------------------- Dataset Parsing ---------------------- #
@@ -305,27 +329,47 @@ def augment_dataset(
             if isinstance(first, dict):
                 first_desc = str(first.get("description") or "")
 
+        # Build argument_list from the first parameters variant (compact JSON)
+        argument_list = ""
+        params_variants = updated.get("parameters_variants") or []
+        if isinstance(params_variants, list) and params_variants:
+            pv0 = params_variants[0]
+            if isinstance(pv0, dict):
+                params_obj = pv0.get("parameters")
+                if isinstance(params_obj, dict):
+                    argument_list = json.dumps(params_obj, ensure_ascii=False)
+
         if dry_run:
             updated["aug_description"] = first_desc.strip() or "No description provided."
+            updated["aug_name"] = tool_name  # placeholder in dry-run
             augmented_rows.append(updated)
             continue
+        
 
-        aug_desc, raw_out, parse_mode = rewrite_tool_once(
+        aug_name, aug_desc, raw_out, parse_mode = rewrite_tool_once(
             client=client,
             model=model,
             system_prompt=system_prompt,
             tool_name=tool_name,
+            argument_list=argument_list,
             description=first_desc,
             max_retries=max_retries,
             max_desc_chars=max_desc_chars,
             allow_backticks=allow_backticks,
         )
 
+
         if not aug_desc:
             print(f"[warn] JSON parse failed for tool={tool_name}; using original description.")
             aug_desc = first_desc.strip() or "No description provided."
 
+        if not aug_name:
+            # If name rewrite failed, fall back to callable name as display name
+            aug_name = tool_name
+
         updated["aug_description"] = aug_desc
+        updated["aug_name"] = aug_name
+
         updated["_rewrite_meta"] = {
             "rewriter_model": model,
             "rewritten_at_utc": utc_now_iso(),
@@ -354,7 +398,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument("--model", default="gpt-4o")
     parser.add_argument(
         "--prompt-file",
-        default="bfcl_eval\data\prompts\docstring_rewriter.txt",
+        default="bfcl_eval\data\prompts\docstring_rewriter_V1.txt",
     )
     parser.add_argument("--max-desc-chars", type=int, default=1200)
     parser.add_argument("--allow-backticks", action="store_true")
