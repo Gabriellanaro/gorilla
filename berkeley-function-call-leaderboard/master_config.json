@@ -8,15 +8,17 @@
       "name": "orig_name",
       "description": "orig_desc",
       "tool_desc": "original",
-      "result_dir": "result",
-      "score_dir": "score"
+      "tool_name": "original",
+      "result_dir": "result_desc_original_name_original",
+      "score_dir": "score_desc_original_name_original"
     },
     {
       "name": "aug_name",
       "description": "aug_desc",
       "tool_desc": "augmented",
-      "result_dir": "result_augmented",
-      "score_dir": "score_augmented"
+      "tool_name": "augmented",
+      "result_dir": "result_desc_augmented_name_augmented",
+      "score_dir": "score_desc_augmented_name_augmented"
     }
   ],
   "azure": {

@@ -1,0 +1,53 @@
+{
+  "tool_name": "Basic.checkSizes",
+  "orig_descriptions": [
+    {
+      "description": "Checks if the sizes of various views of the environment map match the expected size and if the map's empty status is consistent with the expected size.",
+      "source_files": [
+        "simple_java"
+      ]
+    }
+  ],
+  "parameters_variants": [
+    {
+      "parameters": {
+        "type": "dict",
+        "properties": {
+          "environ": {
+            "type": "HashMap",
+            "description": "The environment variable map to check."
+          },
+          "size": {
+            "type": "integer",
+            "description": "The expected size of the environment variable map."
+          }
+        },
+        "required": [
+          "environ",
+          "size"
+        ]
+      },
+      "source_files": [
+        "simple_java"
+      ]
+    }
+  ],
+  "source_files": [
+    "simple_java"
+  ],
+  "task_types": [
+    "single_turn"
+  ],
+  "num_occurrences": 1,
+  "num_conversations": 1,
+  "num_as_ground_truth": 1,
+  "aug_description": "Use this tool to verify that an environment variable map has the expected number of entries and a consistent empty/non-empty state. Call it when you need to check that a given map of environment variables (environ) matches an expected size (size) and that all internal views of this map agree on that size. The tool inspects the provided environ as a whole and compares its size to the integer value in size, also ensuring that the reported emptiness of the map is consistent with that expected size. This tool does not modify the map, read from any external environment, or infer the expected size; you must supply both the map and the expected size explicitly. Prefer this tool when the main goal is to validate structural consistency and expected entry count of an environment variable map, not to read or update individual environment variables.",
+  "aug_name": "validate environment map size",
+  "_rewrite_meta": {
+    "rewriter_model": "gpt-5.1-responses",
+    "rewritten_at_utc": "2026-01-14T20:40:22+00:00",
+    "prompt_hash": "06250bad6ab1885d8cbdcf87e63c53ab091cab4438c4afde5b2d8353f68a5b04",
+    "parse_mode": "json_ok",
+    "raw_output_hash": "d7a4fb58f644faaf983c8c7cab2d9d17200f8dfb7432905da46745a838897fde"
+  }
+}

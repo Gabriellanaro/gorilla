@@ -18,7 +18,10 @@ from bfcl_eval.eval_checker.multi_turn_eval.multi_turn_utils import (
     execute_multi_turn_func_call,
     is_empty_execute_response,
 )
-from bfcl_eval.model_handler.utils import add_memory_instruction_system_prompt
+from bfcl_eval.model_handler.utils import (
+    _try_parse_python_literal,
+    add_memory_instruction_system_prompt,
+)
 from bfcl_eval.utils import *
 from overrides import final
 
@@ -232,6 +235,10 @@ class BaseHandler:
                 # Try parsing the model response
                 model_response_data = self._parse_query_response_FC(api_response)
                 model_responses = model_response_data["model_responses"]
+                parsed_model_responses = _try_parse_python_literal(model_responses)
+                if parsed_model_responses is not None:
+                    model_responses = parsed_model_responses
+                    model_response_data["model_responses"] = parsed_model_responses
 
                 # Add the assistant message to the chat history
                 inference_data = self._add_assistant_message_FC(
@@ -256,6 +263,12 @@ class BaseHandler:
                     log_entry["reasoning_content"] = reasoning_content
 
                 current_step_inference_log.append(log_entry)
+
+                # Final answer payloads are not tool calls; skip tool decoding.
+                if isinstance(model_responses, dict) and set(
+                    model_responses.keys()
+                ).issubset({"answer", "context"}):
+                    break
 
                 # Try decoding the model response
                 try:

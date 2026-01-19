@@ -51,6 +51,13 @@ def get_args():
         choices=["original", "augmented"],
         help="Select tool description source when building prompts.",
     )
+    parser.add_argument(
+        "--tool-name",
+        type=str,
+        default="original",
+        choices=["original", "augmented"],
+        help="Select tool name source when building prompts.",
+    )
     parser.add_argument("--allow-overwrite", "-o", action="store_true", default=False)
     parser.add_argument(
         "--skip-server-setup",
@@ -81,18 +88,26 @@ def build_handler(model_name, temperature):
     return handler
 
 
-def get_involved_test_entries(test_category_args, run_ids, tool_desc_mode: str):
+def get_involved_test_entries(
+    test_category_args, run_ids, tool_desc_mode: str, tool_name_mode: str
+):
     all_test_categories, all_test_entries_involved = [], []
     if run_ids:
         all_test_categories, all_test_entries_involved = load_test_entries_from_id_file(
-            TEST_IDS_TO_GENERATE_PATH, tool_desc_mode=tool_desc_mode
+            TEST_IDS_TO_GENERATE_PATH,
+            tool_desc_mode=tool_desc_mode,
+            tool_name_mode=tool_name_mode,
         )
 
     else:
         all_test_categories = parse_test_category_argument(test_category_args)
         for test_category in all_test_categories:
             all_test_entries_involved.extend(
-                load_dataset_entry(test_category, tool_desc_mode=tool_desc_mode)
+                load_dataset_entry(
+                    test_category,
+                    tool_desc_mode=tool_desc_mode,
+                    tool_name_mode=tool_name_mode,
+                )
             )
 
     return (
@@ -364,7 +379,9 @@ def main(args):
     (
         all_test_categories,
         all_test_entries_involved,
-    ) = get_involved_test_entries(args.test_category, args.run_ids, args.tool_desc)
+    ) = get_involved_test_entries(
+        args.test_category, args.run_ids, args.tool_desc, args.tool_name
+    )
 
     for model_name in args.model:
         if model_name not in MODEL_CONFIG_MAPPING:
@@ -387,6 +404,12 @@ def main(args):
                     f"Since {model_name} is a FC model based on its config, the format sensitivity test cases will be skipped."
                 )
 
+    if args.tool_name != "original":
+        tqdm.write(
+            "Note: Augmented tool names are injected into tool descriptions as display labels; "
+            "callable names remain unchanged."
+        )
+
     if args.result_dir is not None:
         args.result_dir = PROJECT_ROOT / args.result_dir
     else:
@@ -405,6 +428,7 @@ def main(args):
             "model": model_name,
             "test_category": args.test_category,
             "tool_desc": args.tool_desc,
+            "tool_name": args.tool_name,
             "temperature": args.temperature,
             "run_ids_mode": args.run_ids,
         }

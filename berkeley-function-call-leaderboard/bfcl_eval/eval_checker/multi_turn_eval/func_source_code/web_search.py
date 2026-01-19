@@ -1,4 +1,3 @@
-import os
 import random
 import time
 from typing import Optional
@@ -7,7 +6,7 @@ from urllib.parse import urlparse
 import html2text
 import requests
 from bs4 import BeautifulSoup
-from serpapi import GoogleSearch
+from ddgs import DDGS
 
 ERROR_TEMPLATES = [
     "503 Server Error: Service Unavailable for url: {url}",
@@ -131,79 +130,53 @@ class WebSearchAPI:
             - 'href' (str): The URL of the search result.
             - 'body' (str): A brief description or snippet from the search result.
         """
-        backoff = 2  # initial back-off in seconds
-        params = {
-            "engine": "duckduckgo",
-            "q": keywords,
-            "kl": region,
-            "api_key": os.getenv("SERPAPI_API_KEY"),
-        }
+        backoff = 1.5  # initial back-off in seconds
+        max_attempts = 3
+        search_results = None
 
-        # Infinite retry loop with exponential backoff
-        while True:
+        for attempt in range(max_attempts):
             try:
-                search = GoogleSearch(params)
-                search_results = search.get_dict()
+                with DDGS(timeout=10) as ddgs:
+                    search_results = list(
+                        ddgs.text(
+                            keywords,
+                            region=region,
+                            safesearch="moderate",
+                            max_results=max_results,
+                        )
+                    )
+                break
             except Exception as e:
-                # If the underlying HTTP call raised a 429 we retry, otherwise propagate
-                if "429" in str(e):
-                    wait_time = backoff + random.uniform(0, backoff)
-                    error_block = (
-                        "*" * 100
-                        + f"\n❗️❗️ [WebSearchAPI] Received 429 from SerpAPI. The number of requests sent using this API key exceeds the hourly throughput limit OR your account has run out of searches. Retrying in {wait_time:.1f} seconds…"
-                        + "*" * 100
-                    )
-                    print(error_block)
-                    time.sleep(wait_time)
-                    backoff = min(backoff * 2, 120)  # cap the back-off
+                if attempt < max_attempts - 1:
+                    time.sleep(backoff)
+                    backoff = min(backoff * 2, 10)
                     continue
-                else:
-                    error_block = (
-                        "*" * 100
-                        + f"\n❗️❗️ [WebSearchAPI] Error from SerpAPI: {str(e)}. This is not a rate-limit error, so it will not be retried."
-                        + "*" * 100
-                    )
-                    print(error_block)
-                    return {"error": str(e)}
+                return {"error": str(e)}
 
-            # SerpAPI sometimes returns the error in the payload instead of raising
-            if "error" in search_results and "429" in str(search_results["error"]):
-                wait_time = backoff + random.uniform(0, backoff)
-                error_block = (
-                    "*" * 100
-                    + f"\n❗️❗️ [WebSearchAPI] Received 429 from SerpAPI. The number of requests sent using this API key exceeds the hourly throughput limit OR your account has run out of searches. Retrying in {wait_time:.1f} seconds…"
-                    + "*" * 100
-                )
-                print(error_block)
-                time.sleep(wait_time)
-                backoff = min(backoff * 2, 120)
-                continue
-
-            break  # Success – no rate-limit error detected
-
-        if "organic_results" not in search_results:
+        if search_results is None:
             return {
                 "error": "Failed to retrieve the search results from server. Please try again later."
             }
 
-        search_results = search_results["organic_results"]
-
         # Convert the search results to the desired format
         results = []
         for result in search_results[:max_results]:
+            title = result.get("title", "")
+            href = result.get("href", "")
+            body = result.get("body", "")
             if self.show_snippet:
                 results.append(
                     {
-                        "title": result["title"],
-                        "href": result["link"],
-                        "body": result["snippet"],
+                        "title": title,
+                        "href": href,
+                        "body": body,
                     }
                 )
             else:
                 results.append(
                     {
-                        "title": result["title"],
-                        "href": result["link"],
+                        "title": title,
+                        "href": href,
                     }
                 )
 

@@ -156,13 +156,26 @@ def generate(
         case_sensitive=False,
         rich_help_panel="Prompt options",
     ),
+    tool_name: str = typer.Option(
+        "original",
+        "--tool-name",
+        help="Select tool name source when building prompts.",
+        show_default=True,
+        case_sensitive=False,
+        rich_help_panel="Prompt options",
+    ),
+    aug_tool_catalog: Optional[str] = typer.Option(
+        None,
+        "--aug-tool-catalog",
+        help="Path to an augmented tool catalogue JSONL (overrides default when --tool-desc=augmented).",
+        rich_help_panel="Prompt options",
+    ),
 ):
     """
     Generate the LLM response for one or more models on a test-category (same as openfunctions_evaluation.py).
     """
-
-    if tool_desc.lower() == "augmented" and str(result_dir) == str(RESULT_PATH):
-        result_dir = "result_augmented"
+    if str(result_dir) == str(RESULT_PATH):
+        result_dir = f"result_desc_{tool_desc.lower()}_name_{tool_name.lower()}"
 
     args = SimpleNamespace(
         model=model,
@@ -180,8 +193,11 @@ def generate(
         allow_overwrite=allow_overwrite,
         run_ids=run_ids,
         tool_desc=tool_desc,
+        tool_name=tool_name,
     )
     load_dotenv(dotenv_path=DOTENV_PATH, verbose=True, override=True)  # Load the .env file
+    if aug_tool_catalog:
+        os.environ["BFCL_AUG_TOOL_CATALOG_PATH"] = aug_tool_catalog
     generation_main(args)
 
 
@@ -275,6 +291,13 @@ def evaluate(
         show_default=True,
         case_sensitive=False,
     ),
+    tool_name: str = typer.Option(
+        "original",
+        "--tool-name",
+        help="Select tool name source used during generation to resolve result/score paths.",
+        show_default=True,
+        case_sensitive=False,
+    ),
 ):
     """
     Evaluate results from run of one or more models on a test-category (same as eval_runner.py).
@@ -282,11 +305,10 @@ def evaluate(
 
     load_dotenv(dotenv_path=DOTENV_PATH, verbose=True, override=True)  # Load the .env file
 
-    if tool_desc.lower() == "augmented":
-        if result_dir is None:
-            result_dir = "result_augmented"
-        if score_dir is None:
-            score_dir = "score_augmented"
+    if result_dir is None:
+        result_dir = f"result_desc_{tool_desc.lower()}_name_{tool_name.lower()}"
+    if score_dir is None:
+        score_dir = f"score_desc_{tool_desc.lower()}_name_{tool_name.lower()}"
 
     evaluation_main(model, test_category, result_dir, score_dir, partial_eval)
 

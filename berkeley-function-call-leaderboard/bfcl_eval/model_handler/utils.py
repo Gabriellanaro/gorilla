@@ -205,6 +205,10 @@ def convert_to_tool(functions, mapping, model_style):
 
 
 def convert_to_function_call(function_call_list):
+    parsed_function_call_list = _try_parse_python_literal(function_call_list)
+    if parsed_function_call_list is not None:
+        function_call_list = parsed_function_call_list
+
     if type(function_call_list) == dict:
         function_call_list = [function_call_list]
     # function_call_list is of type list[dict[str, str]] or list[dict[str, dict]]
@@ -212,12 +216,45 @@ def convert_to_function_call(function_call_list):
     for function_call in function_call_list:
         for key, value in function_call.items():
             if type(value) == str:
-                value = json.loads(value)
+                try:
+                    value = json.loads(value)
+                except json.JSONDecodeError:
+                    parsed_value = _try_parse_python_literal(value)
+                    if parsed_value is not None:
+                        value = parsed_value
             execution_list.append(
                 f"{key}({','.join([f'{k}={repr(v)}' for k,v in value.items()])})"
             )
 
     return execution_list
+
+
+_MAX_PY_LITERAL_LEN = 20000
+_PY_LITERAL_LOGGED = False
+
+
+def _try_parse_python_literal(value):
+    if not isinstance(value, str):
+        return None
+    stripped = value.strip()
+    if not stripped or len(stripped) > _MAX_PY_LITERAL_LEN:
+        return None
+    try:
+        parsed = ast.literal_eval(stripped)
+    except (ValueError, SyntaxError):
+        return None
+    if isinstance(parsed, (dict, list)):
+        _log_python_literal_parse_once()
+        return parsed
+    return None
+
+
+def _log_python_literal_parse_once():
+    global _PY_LITERAL_LOGGED
+    if _PY_LITERAL_LOGGED:
+        return
+    _PY_LITERAL_LOGGED = True
+    print("Applied python-literal parsing to model response payload.")
 
 
 def convert_value(value, type_str):

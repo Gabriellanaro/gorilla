@@ -21,6 +21,7 @@ from bfcl_eval.constants.executable_backend_config import (
 _FILE_LOCK_REGISTRY: dict[str, FileLock] = {}
 _FILE_LOCK_REGISTRY_LOCK = Lock()
 _AUGMENTED_TOOL_DESC_CACHE: dict[str, str] | None = None
+_AUGMENTED_TOOL_NAME_CACHE: dict[str, str] | None = None
 
 
 def _get_file_lock(filepath: str) -> FileLock:
@@ -171,7 +172,9 @@ def parse_test_category_argument(test_category_args: list[str]) -> list[str]:
 
 
 def load_test_entries_from_id_file(
-    id_file_path: Path, tool_desc_mode: str = "original"
+    id_file_path: Path,
+    tool_desc_mode: str = "original",
+    tool_name_mode: str = "original",
 ) -> tuple[list[str], list[dict]]:
     """
     Helper function to load the test entries from the id file (e.g. `test_case_ids_to_generate.json.example`)
@@ -189,7 +192,11 @@ def load_test_entries_from_id_file(
         entries.extend(
             [
                 entry
-                for entry in load_dataset_entry(category, tool_desc_mode=tool_desc_mode)
+                for entry in load_dataset_entry(
+                    category,
+                    tool_desc_mode=tool_desc_mode,
+                    tool_name_mode=tool_name_mode,
+                )
                 if entry["id"] in test_ids
             ]
         )
@@ -411,6 +418,7 @@ def load_dataset_entry(
     include_prereq: bool = True,
     include_language_specific_hint: bool = True,
     tool_desc_mode: str = "original",
+    tool_name_mode: str = "original",
 ) -> list[dict]:
     """
     This function retrieves the dataset entry for a given test category.
@@ -418,10 +426,13 @@ def load_dataset_entry(
     If `contain_prereq` is True, it will include the pre-requisite entries for the memory test categories.
     If `include_language_specific_hint` is True, it will include the language-specific hint for the function description (for Java, JavaScript, and Python).
     If `tool_desc_mode` is "augmented", it will replace tool descriptions using the augmented tool catalogue.
+    If `tool_name_mode` is "augmented", it will replace tool names using the augmented tool catalogue.
     """
     if is_format_sensitivity(test_category):
         # Format sensitivity categories
-        all_entries = load_format_sensitivity_test_cases(tool_desc_mode=tool_desc_mode)
+        all_entries = load_format_sensitivity_test_cases(
+            tool_desc_mode=tool_desc_mode, tool_name_mode=tool_name_mode
+        )
 
     elif is_web_search(test_category):
         # Web search categories
@@ -450,6 +461,11 @@ def load_dataset_entry(
     elif tool_desc_mode != "original":
         raise ValueError(f"Unsupported tool_desc_mode: {tool_desc_mode}")
 
+    if tool_name_mode == "augmented":
+        all_entries = apply_augmented_tool_names(all_entries)
+    elif tool_name_mode != "original":
+        raise ValueError(f"Unsupported tool_name_mode: {tool_name_mode}")
+
     if include_language_specific_hint:
         all_entries = add_language_specific_hint_to_function_doc(all_entries)
 
@@ -461,7 +477,15 @@ def load_augmented_tool_descriptions() -> dict[str, str]:
     if _AUGMENTED_TOOL_DESC_CACHE is not None:
         return _AUGMENTED_TOOL_DESC_CACHE
 
-    augmented_path = PROMPT_PATH / "internal" / "bfcl_v4_tool_catalogue_augmented.jsonl"
+    env_override = os.getenv("BFCL_AUG_TOOL_CATALOG_PATH")
+    if env_override:
+        augmented_path = Path(env_override)
+        if not augmented_path.is_absolute():
+            augmented_path = (PROJECT_ROOT / augmented_path).resolve()
+    else:
+        augmented_path = (
+            PROMPT_PATH / "internal" / "bfcl_v4_tool_catalogue_augmented.jsonl"
+        )
     if not augmented_path.exists():
         raise FileNotFoundError(
             f"Augmented tool catalogue not found: {augmented_path}"
@@ -483,6 +507,41 @@ def load_augmented_tool_descriptions() -> dict[str, str]:
     return mapping
 
 
+def load_augmented_tool_names() -> dict[str, str]:
+    global _AUGMENTED_TOOL_NAME_CACHE
+    if _AUGMENTED_TOOL_NAME_CACHE is not None:
+        return _AUGMENTED_TOOL_NAME_CACHE
+
+    env_override = os.getenv("BFCL_AUG_TOOL_CATALOG_PATH")
+    if env_override:
+        augmented_path = Path(env_override)
+        if not augmented_path.is_absolute():
+            augmented_path = (PROJECT_ROOT / augmented_path).resolve()
+    else:
+        augmented_path = (
+            PROMPT_PATH / "internal" / "bfcl_v4_tool_catalogue_augmented.jsonl"
+        )
+    if not augmented_path.exists():
+        raise FileNotFoundError(
+            f"Augmented tool catalogue not found: {augmented_path}"
+        )
+
+    mapping: dict[str, str] = {}
+    with open(augmented_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            entry = json.loads(line)
+            tool_name = entry.get("tool_name")
+            aug_name = entry.get("aug_name")
+            if tool_name and aug_name:
+                mapping[tool_name] = aug_name
+
+    _AUGMENTED_TOOL_NAME_CACHE = mapping
+    return mapping
+
+
 def apply_augmented_tool_descriptions(test_cases: list[dict]) -> list[dict]:
     mapping = load_augmented_tool_descriptions()
 
@@ -494,6 +553,26 @@ def apply_augmented_tool_descriptions(test_cases: list[dict]) -> list[dict]:
             tool_name = func.get("name")
             if tool_name in mapping:
                 func["description"] = mapping[tool_name]
+
+    return test_cases
+
+
+def apply_augmented_tool_names(test_cases: list[dict]) -> list[dict]:
+    mapping = load_augmented_tool_names()
+
+    for entry in test_cases:
+        functions = entry.get("function")
+        if not functions:
+            continue
+        for func in functions:
+            tool_name = func.get("name")
+            if tool_name in mapping:
+                display_name = mapping[tool_name]
+                base_desc = func.get("description", "")
+                func["description"] = (
+                    f"Display name: {display_name}. Callable name: {tool_name}. "
+                    f"{base_desc}"
+                )
 
     return test_cases
 
@@ -936,12 +1015,15 @@ def populate_initial_settings_for_web_search_test_cases(
 
 def load_format_sensitivity_test_cases(
     tool_desc_mode: str = "original",
+    tool_name_mode: str = "original",
 ) -> list[dict]:
     """
     Loads all the format sensitivity test cases. 26 configs x 200 test cases = 5200 test cases.
     """
     _, all_test_entries_involved = load_test_entries_from_id_file(
-        FORMAT_SENSITIVITY_IDS_PATH, tool_desc_mode=tool_desc_mode
+        FORMAT_SENSITIVITY_IDS_PATH,
+        tool_desc_mode=tool_desc_mode,
+        tool_name_mode=tool_name_mode,
     )
     all_configs = get_all_format_sensitivity_configs()
 

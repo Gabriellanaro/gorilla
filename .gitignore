@@ -46,3 +46,9 @@ berkeley-function-call-leaderboard/**/*.lock
 
 # Ignore the wandb cache:
 **/wandb/
+
+# Ignore results and scores
+/berkeley-function-call-leaderboard/result_desc_original_name_original
+/berkeley-function-call-leaderboard/score_desc_original_name_original
+/berkeley-function-call-leaderboard/result_desc_augmented_name_augmented
+/berkeley-function-call-leaderboard/score_desc_augmented_name_augmented

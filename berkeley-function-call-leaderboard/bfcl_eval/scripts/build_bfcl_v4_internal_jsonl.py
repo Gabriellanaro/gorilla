@@ -37,8 +37,7 @@ Usage:
     --output data/internal/bfcl_v4_all_internal.jsonl
 
 Assumptions:
-- For each BFCL_v4_*.json, a matching file exists at:
-    possible_answer/<same filename>
+- possible_answer/<same filename> may be missing; we still emit rows with null ground_truth.
 - Files are either JSON arrays OR JSONL (one JSON object per line). Both supported.
 """
 
@@ -529,14 +528,15 @@ def main() -> None:
     if not bfcl_dir.exists():
         raise FileNotFoundError(f"bfcl_dir not found: {bfcl_dir}")
     if not answers_dir.exists():
-        raise FileNotFoundError(f"possible_answer folder not found: {answers_dir}")
+        # Allow processing without possible_answer; we will emit null ground_truth.
+        answers_dir = None
 
     question_files = sorted(bfcl_dir.glob("BFCL_v4_*.json"))
     if not question_files:
         raise FileNotFoundError(f"No BFCL_v4_*.json found in: {bfcl_dir}")
 
-    skipped_no_answer_files: List[str] = []
-    skipped_missing_ids: List[Tuple[str, str]] = []  # (filename, missing_id)
+    missing_answer_files: List[str] = []
+    missing_answer_ids: List[Tuple[str, str]] = []  # (filename, missing_id)
     skipped_non_tool_files: List[str] = []
     out_rows: List[Dict[str, Any]] = []
     total_q = 0
@@ -551,14 +551,11 @@ def main() -> None:
 
         task_type = "multi_turn" if "multi_turn" in source_label else "single_turn"
 
-        afile = answers_dir / qfile.name
-        if not afile.exists():
-            skipped_no_answer_files.append(qfile.name)
-            continue
-
-
+        afile = (answers_dir / qfile.name) if answers_dir is not None else None
         qrows = load_json_or_jsonl(qfile)
-        arows = load_json_or_jsonl(afile)
+        arows = load_json_or_jsonl(afile) if afile is not None and afile.exists() else []
+        if afile is None or not afile.exists():
+            missing_answer_files.append(qfile.name)
         # Skip files that are not tool-calling (no tool list schema in the questions file)
         if not qrows:
             skipped_non_tool_files.append(qfile.name)
@@ -583,11 +580,11 @@ def main() -> None:
             total_q += 1
             raw_id = get_id(qrow)
             if raw_id not in aidx:
-                skipped_missing_ids.append((afile.name, raw_id))
-                continue
-
-
-            arow = aidx[raw_id]
+                # Still emit a row with null ground_truth so tools are catalogued.
+                missing_answer_ids.append((afile.name, raw_id))
+                arow = {"ground_truth": None}
+            else:
+                arow = aidx[raw_id]
 
             messages, turn_index_map = normalize_messages(qrow)
             tools = normalize_tools(qrow)
@@ -642,18 +639,18 @@ def main() -> None:
     print(f"Question examples read: {total_q}")
     print(f"Internal rows written (tool-call decisions): {total_out}")
     print(f"Output: {out_path}")
-    if skipped_no_answer_files:
-        print("\nSkipped files with no possible_answer match:")
-        for fn in skipped_no_answer_files:
+    if missing_answer_files:
+        print("\nFiles without possible_answer (ground_truth set to None):")
+        for fn in missing_answer_files:
             print(f"  - {fn}")
 
-    if skipped_missing_ids:
-        print("\nSkipped examples with missing possible_answer id:")
+    if missing_answer_ids:
+        print("\nExamples with missing possible_answer id (ground_truth set to None):")
         # show only first 50 to avoid flooding terminal
-        for fn, mid in skipped_missing_ids[:50]:
+        for fn, mid in missing_answer_ids[:50]:
             print(f"  - file={fn} missing_id={mid}")
-        if len(skipped_missing_ids) > 50:
-            print(f"  ... and {len(skipped_missing_ids) - 50} more")
+        if len(missing_answer_ids) > 50:
+            print(f"  ... and {len(missing_answer_ids) - 50} more")
     if skipped_non_tool_files:
         print("\nSkipped non-tool BFCL files (no tools/functions/function field):")
         for fn in skipped_non_tool_files:

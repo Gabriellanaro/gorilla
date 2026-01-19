@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -213,13 +214,21 @@ def rewrite_tool_once(
     parse_mode = "unknown"
 
     for attempt in range(max_retries + 1):
-        resp = client.responses.create(
-            model=model,
-            input=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_content},
-            ],
-        )
+        try:
+            resp = client.responses.create(
+                model=model,
+                input=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content},
+                ],
+            )
+        except Exception as e:
+            status = getattr(e, "status_code", None)
+            msg = str(e)
+            if status == 429 or "429" in msg or "Too Many Requests" in msg:
+                time.sleep(5)
+                continue
+            raise
         last_text = extract_output_text(resp)
         parsed = _json_from_text(last_text)
         if parsed is None or ("augmented_description" not in parsed) or ("augmented_name" not in parsed):
@@ -319,8 +328,12 @@ def augment_dataset(
                 continue
 
         if skip_existing and tool_name in existing_tools:
-            augmented_rows.append(existing_tools[tool_name])
-            continue
+            existing = existing_tools[tool_name]
+            aug_name = str(existing.get("aug_name") or "").strip()
+            aug_desc = str(existing.get("aug_description") or "").strip()
+            if aug_name and aug_desc:
+                augmented_rows.append(existing)
+                continue
 
         orig_descs = updated.get("orig_descriptions") or []
         first_desc = ""
