@@ -160,8 +160,7 @@ Arguments:
 
 Examples:
 ```bash
-python leaderboard_compare.py --orig score_desc_original_name_original --aug score_desc_augmented_name_augmented
-python leaderboard_compare.py --out comparison_out/leaderboard
+python leaderboard_compare.py --orig score_desc_original_name_original --aug score_desc_augmented_name_augmented --out comparison_out/leaderboard
 ```
 
 ### `python compare_scores.py` (repo root)
