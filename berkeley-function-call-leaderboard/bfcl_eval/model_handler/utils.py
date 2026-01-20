@@ -233,6 +233,42 @@ _MAX_PY_LITERAL_LEN = 20000
 _PY_LITERAL_LOGGED = False
 
 
+_TRUNCATED_TOOL_PAYLOAD_LOGGED = False
+
+
+def _log_truncated_tool_payload(payload: str):
+    global _TRUNCATED_TOOL_PAYLOAD_LOGGED
+    if _TRUNCATED_TOOL_PAYLOAD_LOGGED:
+        return
+    _TRUNCATED_TOOL_PAYLOAD_LOGGED = True
+    tail = payload[-120:] if len(payload) > 120 else payload
+    print(
+        "Detected possible truncated tool payload "
+        f"(len={len(payload)}; tail={tail!r})."
+    )
+
+
+def coerce_fc_response(result, response_format: str = "auto"):
+    """
+    Coerce Responses API text outputs into an empty tool-call list, or parse
+    JSON-encoded tool calls when present.
+    """
+    if response_format not in ("auto", "responses"):
+        return None
+    if not isinstance(result, str):
+        return None
+    stripped = result.strip()
+    if not stripped:
+        return []
+    if stripped.startswith("{") or stripped.startswith("["):
+        try:
+            return json.loads(stripped)
+        except json.JSONDecodeError:
+            _log_truncated_tool_payload(stripped)
+            return []
+    return []
+
+
 def _try_parse_python_literal(value):
     if not isinstance(value, str):
         return None

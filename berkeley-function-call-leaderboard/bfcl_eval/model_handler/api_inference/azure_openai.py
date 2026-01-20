@@ -10,6 +10,7 @@ from bfcl_eval.constants.enums import ModelStyle
 from bfcl_eval.constants.type_mappings import GORILLA_TO_OPENAPI
 from bfcl_eval.model_handler.base_handler import BaseHandler
 from bfcl_eval.model_handler.utils import (
+    coerce_fc_response,
     convert_to_function_call,
     convert_to_tool,
     default_decode_ast_prompting,
@@ -76,6 +77,11 @@ class AzureOpenAIResponsesHandler(BaseHandler):
 
     def decode_execute(self, result, has_tool_call_tag):
         if self.is_fc_model:
+            coerced = coerce_fc_response(result, self.response_format)
+            if coerced is not None:
+                if coerced == []:
+                    return []
+                return convert_to_function_call(coerced)
             return convert_to_function_call(result)
         return default_decode_execute_prompting(result, has_tool_call_tag)
 

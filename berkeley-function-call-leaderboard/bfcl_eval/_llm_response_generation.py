@@ -58,6 +58,13 @@ def get_args():
         choices=["original", "augmented"],
         help="Select tool name source when building prompts.",
     )
+    parser.add_argument(
+        "--response-format",
+        type=str,
+        default="auto",
+        choices=["auto", "chatcompletions", "responses"],
+        help="Override response parsing format when decoding tool calls.",
+    )
     parser.add_argument("--allow-overwrite", "-o", action="store_true", default=False)
     parser.add_argument(
         "--skip-server-setup",
@@ -77,13 +84,14 @@ def get_args():
     return args
 
 
-def build_handler(model_name, temperature):
+def build_handler(model_name, temperature, response_format=None):
     config = MODEL_CONFIG_MAPPING[model_name]
     handler = config.model_handler(
         model_name=config.model_name,
         temperature=temperature,
         registry_name=model_name,
         is_fc_model=config.is_fc_model,
+        response_format=response_format or "auto",
     )
     return handler
 
@@ -227,7 +235,7 @@ def multi_threaded_inference(handler, test_case, include_input_log, exclude_stat
 
 
 def generate_results(args, model_name, test_cases_total):
-    handler = build_handler(model_name, args.temperature)
+    handler = build_handler(model_name, args.temperature, args.response_format)
 
     if isinstance(handler, OSSHandler):
         handler: OSSHandler
@@ -375,6 +383,8 @@ def main(args):
         args.model = [args.model]
     if type(args.test_category) is not list:
         args.test_category = [args.test_category]
+    if not hasattr(args, "response_format") or not args.response_format:
+        args.response_format = "auto"
 
     (
         all_test_categories,
@@ -431,6 +441,7 @@ def main(args):
             "tool_name": args.tool_name,
             "temperature": args.temperature,
             "run_ids_mode": args.run_ids,
+            "response_format": args.response_format,
         }
         with open(metadata_path, "w", encoding="utf-8") as f:
             json.dump(run_metadata, f, ensure_ascii=True, indent=2)

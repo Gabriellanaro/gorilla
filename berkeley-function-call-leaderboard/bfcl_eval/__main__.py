@@ -170,6 +170,12 @@ def generate(
         help="Path to an augmented tool catalogue JSONL (overrides default when --tool-desc=augmented).",
         rich_help_panel="Prompt options",
     ),
+    response_format: str = typer.Option(
+        "auto",
+        "--response-format",
+        help="Override response parsing format when decoding tool calls.",
+        show_default=True,
+    ),
 ):
     """
     Generate the LLM response for one or more models on a test-category (same as openfunctions_evaluation.py).
@@ -194,6 +200,7 @@ def generate(
         run_ids=run_ids,
         tool_desc=tool_desc,
         tool_name=tool_name,
+        response_format=response_format,
     )
     load_dotenv(dotenv_path=DOTENV_PATH, verbose=True, override=True)  # Load the .env file
     if aug_tool_catalog:
