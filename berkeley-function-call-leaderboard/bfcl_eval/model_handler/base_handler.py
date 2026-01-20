@@ -63,6 +63,7 @@ class BaseHandler:
         # Replace the slash with underscore to avoid creating subdirectories
         self.registry_dir_name = registry_name.replace("/", "_")
         self.temperature = temperature
+        self.response_format = kwargs.pop("response_format", "auto")
 
         # Set any additional attributes passed via kwargs
         for _key, _value in kwargs.items():
