@@ -50,9 +50,14 @@ berkeley-function-call-leaderboard/**/*.lock
 # Ignore results and scores
 /berkeley-function-call-leaderboard/result_desc_original_name_original
 /berkeley-function-call-leaderboard/score_desc_original_name_original
+/berkeley-function-call-leaderboard/result_desc_original_name_augmented
+/berkeley-function-call-leaderboard/score_desc_original_name_augmented
+/berkeley-function-call-leaderboard/result_desc_augmented_name_original
+/berkeley-function-call-leaderboard/score_desc_augmented_name_original
 /berkeley-function-call-leaderboard/result_desc_augmented_name_augmented
 /berkeley-function-call-leaderboard/score_desc_augmented_name_augmented
 
 /berkeley-function-call-leaderboard/comparison_out
 /berkeley-function-call-leaderboard/comparison_out/leaderboard
 /berkeley-function-call-leaderboard/result_desc_augmented_name_original
+/berkeley-function-call-leaderboard/descriptiveness_out
