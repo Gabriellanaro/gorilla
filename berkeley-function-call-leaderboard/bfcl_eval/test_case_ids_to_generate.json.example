@@ -2,7 +2,7 @@
     "simple_python": [],
     "simple_java": [],
     "simple_javascript": [],
-    "irrelevance": [],
+    "irrelevance": ["irrelevance_11"],
     "parallel": [],
     "multiple": [],
     "parallel_multiple": [],

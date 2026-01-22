@@ -179,7 +179,7 @@ def load_test_entries_from_id_file(
     """
     Helper function to load the test entries from the id file (e.g. `test_case_ids_to_generate.json.example`)
     """
-    with open(id_file_path) as f:
+    with open(id_file_path, encoding="utf-8-sig") as f:
         test_ids_to_generate = json.load(f)
 
     categories: list[str] = []
@@ -484,7 +484,7 @@ def load_augmented_tool_descriptions() -> dict[str, str]:
             augmented_path = (PROJECT_ROOT / augmented_path).resolve()
     else:
         augmented_path = (
-            PROMPT_PATH / "internal" / "bfcl_v4_tool_catalogue_augmented.jsonl"
+            PROMPT_PATH / "internal" / "bfcl_v4_tool_catalogue_augmented_51.jsonl"
         )
     if not augmented_path.exists():
         raise FileNotFoundError(

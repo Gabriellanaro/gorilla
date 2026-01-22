@@ -22,7 +22,6 @@ ORIG_DESCRIPTION_KEYS = [
 ]
 CATEGORY_KEYS = [
     "category",
-    "subcategory",
     "task_category",
     "tool_category",
     "group",
@@ -36,6 +35,9 @@ SUBCATEGORY_KEYS = [
     "group",
     "split",
     "task_types",
+]
+SUBSUBCATEGORY_KEYS = [
+    "subsubcategory",
 ]
 SCHEMA_KEYS = [
     "parameters",
@@ -74,6 +76,7 @@ def count_syllables(word):
 
 
 def flesch_reading_ease(words, sentences):
+    # readability tests designed to indicate how difficult a passage in English is to understand.
     if not words or sentences == 0:
         return None
     syllables = sum(count_syllables(w) for w in words)
@@ -82,6 +85,7 @@ def flesch_reading_ease(words, sentences):
 
 
 def flesch_kincaid_grade(words, sentences):
+    # readability tests designed to indicate how difficult a passage in English is to understand.
     if not words or sentences == 0:
         return None
     syllables = sum(count_syllables(w) for w in words)
@@ -370,6 +374,15 @@ def extract_texts(entry):
 def extract_category(entry):
     category = "unknown"
     subcategory = "unknown"
+    subsubcategory = "unknown"
+    for key in SUBSUBCATEGORY_KEYS:
+        if key in entry and entry[key]:
+            value = entry[key]
+            if isinstance(value, list) and value:
+                subsubcategory = str(value[0])
+            else:
+                subsubcategory = str(value)
+            break
     for key in CATEGORY_KEYS:
         if key in entry and entry[key]:
             value = entry[key]
@@ -394,7 +407,7 @@ def extract_category(entry):
         task_types = entry.get("task_types")
         if isinstance(task_types, list) and task_types:
             subcategory = str(task_types[0])
-    return category, subcategory
+    return category, subcategory, subsubcategory
 
 
 def extract_schema(entry):
@@ -409,13 +422,14 @@ def extract_output_schema(entry):
     return safe_get_first(entry, OUTPUT_SCHEMA_KEYS)
 
 
-def compute_metrics_for_text(text, schema_info, output_schema):
+def compute_metrics_for_text(text, schema_info, output_schema, include_schema_metrics=True):
     if not text:
         return {}
     metrics = {}
     metrics.update(text_metrics(text))
-    metrics.update(schema_metrics(schema_info, text))
-    metrics.update(output_schema_metrics(output_schema, text))
+    if include_schema_metrics:
+        metrics.update(schema_metrics(schema_info, text))
+        metrics.update(output_schema_metrics(output_schema, text))
     return metrics
 
 
@@ -564,16 +578,16 @@ def main():
             or entry.get("id")
             or ""
         )
-        category, subcategory = extract_category(entry)
+        category, subcategory, subsubcategory = extract_category(entry)
         augmented_text, original_texts = extract_texts(entry)
 
         schema = extract_schema(entry)
         schema_info = extract_schema_info(schema) if isinstance(schema, dict) else None
         output_schema = extract_output_schema(entry)
 
-        aug_metrics = compute_metrics_for_text(augmented_text, schema_info, output_schema)
+        aug_metrics = compute_metrics_for_text(augmented_text, schema_info, output_schema, include_schema_metrics=True)
         orig_metrics_list = [
-            compute_metrics_for_text(text, schema_info, output_schema)
+            compute_metrics_for_text(text, schema_info, output_schema, include_schema_metrics=False)
             for text in original_texts
             if text
         ]
@@ -583,6 +597,7 @@ def main():
             "tool_id": tool_id,
             "category": category,
             "subcategory": subcategory,
+            "subsubcategory": subsubcategory,
         }
 
         metric_keys = set(aug_metrics) | set(orig_metrics)
@@ -603,7 +618,7 @@ def main():
         return
 
     metric_names = sorted({k for row in tool_rows for k in row.keys() if k.startswith(("aug_", "orig_", "delta_"))})
-    tool_fieldnames = ["tool_id", "category", "subcategory"] + metric_names
+    tool_fieldnames = ["tool_id", "category", "subcategory", "subsubcategory"] + metric_names
     write_csv(out_dir / "tool_level_metrics.csv", tool_rows, tool_fieldnames)
 
     grouped = defaultdict(list)
@@ -615,6 +630,11 @@ def main():
     for row in tool_rows:
         key = f"{row['category']}/{row['subcategory']}"
         sub_grouped[key].append(row)
+
+    sub_sub_grouped = defaultdict(list)
+    for row in tool_rows:
+        key = f"{row['category']}/{row['subcategory']}/{row['subsubcategory']}"
+        sub_sub_grouped[key].append(row)
 
     def build_aggregate_rows(group_level, groups):
         rows = []
@@ -631,16 +651,19 @@ def main():
     aggregate_overall = build_aggregate_rows("overall", grouped_overall)
     aggregate_category = build_aggregate_rows("category", grouped)
     aggregate_subcategory = build_aggregate_rows("subcategory", sub_grouped)
+    aggregate_subsubcategory = build_aggregate_rows("subsubcategory", sub_sub_grouped)
 
     aggregate_fields = ["group_level", "group_name", "metric_name", "mean", "median", "p25", "p75", "n"]
     write_csv(out_dir / "aggregate_overall.csv", aggregate_overall, aggregate_fields)
     write_csv(out_dir / "aggregate_by_category.csv", aggregate_category, aggregate_fields)
     write_csv(out_dir / "aggregate_by_subcategory.csv", aggregate_subcategory, aggregate_fields)
+    write_csv(out_dir / "aggregate_by_subsubcategory.csv", aggregate_subsubcategory, aggregate_fields)
 
     report_lines = []
     report_lines.append(f"Tools: {len(tool_rows)}")
     report_lines.append(f"Categories: {len(grouped)}")
     report_lines.append(f"Subcategories: {len(sub_grouped)}")
+    report_lines.append(f"Subsubcategories: {len(sub_sub_grouped)}")
 
     def median_metric(rows, metric):
         vals = [r.get(metric) for r in rows if r.get(metric) is not None]

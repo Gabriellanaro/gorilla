@@ -59,3 +59,4 @@ berkeley-function-call-leaderboard/**/*.lock
 
 /berkeley-function-call-leaderboard/comparison_out
 /berkeley-function-call-leaderboard/descriptiveness_out
+/berkeley-function-call-leaderboard/analysis_out
