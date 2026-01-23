@@ -475,12 +475,12 @@ def main():
     )
     parser.add_argument(
         "--scores_orig",
-        default=None,
+        default="score_desc_original_name_original",
         help="(Legacy) Path to original scores root for 2-way comparison.",
     )
     parser.add_argument(
         "--scores_aug",
-        default=None,
+        default="score_desc_augmented_name_augmented",
         help="(Legacy) Path to augmented scores root for 2-way comparison.",
     )
     parser.add_argument(

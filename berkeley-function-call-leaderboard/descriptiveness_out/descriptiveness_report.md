@@ -1,20 +1,13 @@
 Tools: 1931
-Categories: 16
-Subcategories: 16
+Categories: 3
+Subcategories: 5
+Subsubcategories: 16
 
 Top 5 categories by median augmented param_name_coverage:
-- simple_java: 1.000
-- live_multiple: 1.000
-- live_irrelevance: 1.000
-- multiple: 1.000
-- simple_javascript: 1.000
+- single_turn: 1.000
 
 Bottom 5 categories by median augmented param_name_coverage:
-- parallel: 1.000
-- simple_python: 1.000
-- live_parallel_multiple: 1.000
-- live_parallel: 1.000
-- live_relevance: 1.000
+- single_turn: 1.000
 
 Key metrics summary (augmented vs original):
 - word_count: aug mean=131.587, median=132.000 | orig mean=15.195, median=13.000

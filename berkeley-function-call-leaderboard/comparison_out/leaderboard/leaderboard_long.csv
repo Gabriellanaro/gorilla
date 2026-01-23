@@ -8,6 +8,10 @@ azure-gpt-4o-FC,live,overall,python_parallel_multiple_ast,66.67,66.67,0.0,0.0
 azure-gpt-4o-FC,live,overall,python_simple_ast,70.93,68.22,-2.710000000000008,-0.03820668264486124
 azure-gpt-4o-FC,live,overall,rank,1.0,1.0,0.0,0.0
 azure-gpt-4o-FC,live,overall,relevance_detection,87.5,75.0,-12.5,-0.14285714285714285
+azure-gpt-4o-FC,multi_turn,overall,base,53.5,56.0,2.5,0.04672897196261682
+azure-gpt-4o-FC,multi_turn,overall,long_context,48.5,51.0,2.5,0.05154639175257732
+azure-gpt-4o-FC,multi_turn,overall,multi_turn_overall_acc,42.38,26.75,-15.630000000000003,-0.36880604058518174
+azure-gpt-4o-FC,multi_turn,overall,rank,1.0,1.0,0.0,0.0
 azure-gpt-4o-FC,non_live,overall,ast_summary,84.67,83.79,-0.8799999999999955,-0.010393291602692754
 azure-gpt-4o-FC,non_live,overall,irrelevance_detection,85.0,85.83,0.8299999999999983,0.009764705882352922
 azure-gpt-4o-FC,non_live,overall,java_simple_ast,66.0,65.0,-1.0,-0.015151515151515152
@@ -28,6 +32,9 @@ azure-gpt-5.1-responses-FC,live,overall,python_parallel_multiple_ast,66.67,58.33
 azure-gpt-5.1-responses-FC,live,overall,python_simple_ast,66.67,56.2,-10.469999999999999,-0.15704214789260534
 azure-gpt-5.1-responses-FC,live,overall,rank,2.0,2.0,0.0,0.0
 azure-gpt-5.1-responses-FC,live,overall,relevance_detection,68.75,75.0,6.25,0.09090909090909091
+azure-gpt-5.1-responses-FC,multi_turn,overall,base,38.0,38.5,0.5,0.013157894736842105
+azure-gpt-5.1-responses-FC,multi_turn,overall,multi_turn_overall_acc,31.63,9.62,-22.009999999999998,-0.6958583623142586
+azure-gpt-5.1-responses-FC,multi_turn,overall,rank,2.0,2.0,0.0,0.0
 azure-gpt-5.1-responses-FC,non_live,overall,ast_summary,81.81,77.56,-4.25,-0.05194963940838528
 azure-gpt-5.1-responses-FC,non_live,overall,irrelevance_detection,88.75,88.75,0.0,0.0
 azure-gpt-5.1-responses-FC,non_live,overall,java_simple_ast,63.0,63.0,0.0,0.0
