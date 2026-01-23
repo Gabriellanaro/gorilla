@@ -14,7 +14,7 @@ Generate model responses.
 
 Example:
 ```bash
-bfcl generate --model gpt-4o-2024-11-20-FC --test-category simple_python,parallel
+bfcl generate --model azure-gpt-4o-FC --test-category simple_python,parallel --tool-desc original --tool-name augmented
 ```
 
 ### `bfcl evaluate`
@@ -22,7 +22,7 @@ Evaluate model results.
 
 Example:
 ```bash
-bfcl evaluate --model gpt-4o-2024-11-20-FC --test-category simple_python,parallel
+bfcl evaluate --test-category all --tool-desc augmented --tool-name original --model azure-gpt-5.1-responses-FC
 ```
 
 ## Scripts and notebooks (curated)
