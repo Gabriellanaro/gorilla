@@ -64,3 +64,4 @@ berkeley-function-call-leaderboard/**/*.lock
 /berkeley-function-call-leaderboard/comparison_out
 berkeley-function-call-leaderboard/comparison_out/README.md
 /berkeley-function-call-leaderboard/comparison_out
+/berkeley-function-call-leaderboard/analysis_out_old

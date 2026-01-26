@@ -484,7 +484,7 @@ def load_augmented_tool_descriptions() -> dict[str, str]:
             augmented_path = (PROJECT_ROOT / augmented_path).resolve()
     else:
         augmented_path = (
-            PROMPT_PATH / "internal" / "bfcl_v4_tool_catalogue_augmented_51.jsonl"
+            PROMPT_PATH / "internal" / "bfcl_v4_tool_catalogue_augmented_51_v2.jsonl"
         )
     if not augmented_path.exists():
         raise FileNotFoundError(
