@@ -10,11 +10,13 @@ import json
 import math
 import re
 import sys
+import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
+from bfcl_eval.eval_checker.eval_runner_helper import generate_leaderboard_csv
 
 
 CONDITIONS = {
@@ -22,6 +24,30 @@ CONDITIONS = {
     "OA": "score_desc_original_name_augmented",
     "AO": "score_desc_augmented_name_original",
     "AA": "score_desc_augmented_name_augmented",
+}
+
+REQUIRED_TEST_CATEGORIES = {
+    "simple_python",
+    "simple_java",
+    "simple_javascript",
+    "multiple",
+    "parallel",
+    "parallel_multiple",
+    "irrelevance",
+    "live_simple",
+    "live_multiple",
+    "live_parallel",
+    "live_parallel_multiple",
+    "live_irrelevance",
+    "multi_turn_base",
+    "multi_turn_miss_func",
+    "multi_turn_miss_param",
+    "multi_turn_long_context",
+    "web_search_base",
+    "web_search_no_snippet",
+    "memory_kv",
+    "memory_vector",
+    "memory_rec_sum",
 }
 
 TEST_CATEGORY_GROUPS: Dict[str, Dict[str, List[str]]] = {
@@ -311,6 +337,184 @@ def read_generic_csv(csv_path: Path) -> Optional[pd.DataFrame]:
     return df
 
 
+def parse_model_run_name(model_run: str) -> Tuple[str, int]:
+    match = re.match(r"^(?P<base>.+)_(?P<run>\d+)$", model_run)
+    if match:
+        return match.group("base"), int(match.group("run"))
+    return model_run, 0
+
+
+def coerce_float(value: object) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def coerce_int(value: object) -> Optional[int]:
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        return None
+
+
+def extract_score_summary(path: Path) -> Optional[Tuple[float, int]]:
+    rows = read_json_or_jsonl(path)
+    summary, _ = extract_summary_and_rows(rows)
+    accuracy = coerce_float(summary.get("accuracy"))
+    total_count = coerce_int(summary.get("total_count"))
+    if accuracy is None or total_count is None:
+        return None
+    return accuracy, total_count
+
+
+def collect_run_scores(run_dir: Path) -> Dict[str, Dict[str, float]]:
+    scores: Dict[str, Dict[str, float]] = {}
+    for path in run_dir.rglob("BFCL_v4_*_score.json*"):
+        test_category = parse_test_category_from_filename(path.name)
+        if not test_category:
+            continue
+        summary = extract_score_summary(path)
+        if not summary:
+            warn(f"missing summary in score file: {path}")
+            continue
+        accuracy, total_count = summary
+        scores[test_category] = {"accuracy": accuracy, "total_count": total_count}
+    return scores
+
+
+def compute_run_overall(
+    condition: str,
+    model_name: str,
+    scores: Dict[str, Dict[str, float]],
+    temp_root: Path,
+) -> Tuple[float, Optional[float], str]:
+    with tempfile.TemporaryDirectory(dir=temp_root) as temp_dir:
+        output_path = Path(temp_dir)
+        generate_leaderboard_csv({model_name: scores}, output_path)
+        overall_df = read_generic_csv(output_path / "data_overall.csv")
+        if overall_df is None or overall_df.empty:
+            raise ValueError(f"failed to generate data_overall.csv for {model_name}")
+        row = overall_df.iloc[0]
+        model_display = str(row.get("Model"))
+        overall_acc = coerce_float(row.get("Overall Acc"))
+        if overall_acc is None:
+            raise ValueError(f"missing Overall Acc for {model_name} in {output_path}")
+        excl_map = compute_overall_excl_web({condition: {"data_overall.csv": overall_df}})
+        excl_value = excl_map.get(condition, {}).get(model_display)
+        return overall_acc, excl_value, model_display
+
+
+def summarize_values(values: List[Optional[float]]) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+    cleaned = [float(v) for v in values if v is not None and not pd.isna(v)]
+    if not cleaned:
+        return None, None, None
+    return sum(cleaned) / len(cleaned), min(cleaned), max(cleaned)
+
+
+def build_aggregated_main_rows(
+    root: Path,
+    data_map: Dict[str, Dict[str, pd.DataFrame]],
+) -> List[Dict[str, object]]:
+    fallback_overall: Dict[str, pd.Series] = {}
+    for condition in CONDITIONS:
+        df = data_map.get(condition, {}).get("data_overall.csv")
+        if df is None or "Overall Acc" not in df.columns:
+            continue
+        fallback_overall[condition] = df.set_index("Model")["Overall Acc"]
+
+    fallback_excl = compute_overall_excl_web(data_map)
+
+    legacy_scores: Dict[Tuple[str, str], Dict[str, List[Optional[float]]]] = {}
+    legacy_root = root / "score"
+    temp_root = root / "analysis_out"
+    temp_root.mkdir(parents=True, exist_ok=True)
+
+    if legacy_root.exists():
+        for condition in CONDITIONS:
+            condition_root = legacy_root / condition
+            if not condition_root.exists():
+                continue
+            for run_dir in condition_root.iterdir():
+                if not run_dir.is_dir():
+                    continue
+                model_base, run_id = parse_model_run_name(run_dir.name)
+                scores = collect_run_scores(run_dir)
+                missing = sorted(REQUIRED_TEST_CATEGORIES.difference(scores.keys()))
+                if missing:
+                    warn(
+                        "skipping legacy run with missing categories "
+                        f"{run_dir} (run_id={run_id}): {', '.join(missing)}"
+                    )
+                    continue
+                try:
+                    overall_acc, excl_acc, model_display = compute_run_overall(
+                        condition, model_base, scores, temp_root
+                    )
+                except Exception as exc:  # pragma: no cover - defensive
+                    warn(f"failed to compute overall for {run_dir}: {exc}")
+                    continue
+                key = (condition, model_display)
+                entry = legacy_scores.setdefault(key, {"overall": [], "excl": []})
+                entry["overall"].append(overall_acc)
+                entry["excl"].append(excl_acc)
+
+    models: set[str] = set()
+    for (condition, model_display) in legacy_scores.keys():
+        models.add(model_display)
+    for condition, series in fallback_overall.items():
+        models.update(series.index.tolist())
+
+    rows: List[Dict[str, object]] = []
+    for model in sorted(models):
+        row: Dict[str, object] = {"model": str(model)}
+        for condition in CONDITIONS:
+            key = (condition, model)
+            if key in legacy_scores and legacy_scores[key]["overall"]:
+                overall_mean, overall_min, overall_max = summarize_values(
+                    legacy_scores[key]["overall"]
+                )
+                excl_mean, excl_min, excl_max = summarize_values(legacy_scores[key]["excl"])
+            else:
+                fallback_series = fallback_overall.get(condition)
+                if fallback_series is not None and model in fallback_series.index:
+                    raw_value = fallback_series.get(model)
+                    fallback_value = None if pd.isna(raw_value) else float(raw_value)
+                else:
+                    fallback_value = None
+                overall_mean = overall_min = overall_max = fallback_value
+                fallback_excl_value = fallback_excl.get(condition, {}).get(model)
+                if fallback_excl_value is None or pd.isna(fallback_excl_value):
+                    excl_mean = excl_min = excl_max = None
+                else:
+                    excl_mean = excl_min = excl_max = float(fallback_excl_value)
+
+            row[condition] = overall_mean
+            row[f"{condition}_min"] = overall_min
+            row[f"{condition}_max"] = overall_max
+            row[f"{condition}_excl_web"] = excl_mean
+            row[f"{condition}_excl_web_min"] = excl_min
+            row[f"{condition}_excl_web_max"] = excl_max
+        rows.append(row)
+    return rows
+
+
 def load_all_condition_data(root: Path) -> Dict[str, Dict[str, pd.DataFrame]]:
     data_map: Dict[str, Dict[str, pd.DataFrame]] = {}
     for condition, folder in CONDITIONS.items():
@@ -595,6 +799,7 @@ def build_category_tables(
 
 def render_html(
     rows: List[Dict[str, object]],
+    aggregated_rows: List[Dict[str, object]],
     missing_conditions: List[str],
     category_tables: List[Dict[str, object]],
     summary_tables: List[Dict[str, object]],
@@ -604,6 +809,7 @@ def render_html(
     error_groups: Dict[str, Dict[str, List[str]]],
 ) -> str:
     data_json = json.dumps(rows)
+    aggregated_json = json.dumps(aggregated_rows)
     categories_json = json.dumps(category_tables)
     summaries_json = json.dumps(summary_tables)
     models_json = json.dumps(all_models)
@@ -937,6 +1143,13 @@ def render_html(
           <tbody id="tableBody"></tbody>
         </table>
       </div>
+      <div class="section" id="mainOverallSection">
+        <div class="chart-card" id="mainOverallCard">
+          <div class="chart-title">Main Result (Overall Acc)</div>
+          <div class="note">Bars show mean across runs; error bars show min–max.</div>
+          <div id="main_overall_chart"></div>
+        </div>
+      </div>
       <div id="detailSections"></div>
     </div>
     <div class="tab-panel" id="plotsTab">
@@ -1053,6 +1266,7 @@ def render_html(
   <script>
     const MISSING = "--";
     const mainRows = {data_json};
+    const mainRowsAggregated = {aggregated_json};
     const categoryTablesFull = {categories_json};
     const categoryTablesSummary = {summaries_json};
     const allModels = {models_json};
@@ -1312,7 +1526,7 @@ def render_html(
       const selected = getSelectedModels();
       body.innerHTML = "";
       const tableKey = "main";
-      const sortedRows = getSortedRows(tableKey, mainRows);
+      const sortedRows = getSortedRows(tableKey, mainRowsAggregated);
       sortedRows.forEach((row) => {{
         if (!selected.has(row.model)) {{
           return;
@@ -1351,6 +1565,74 @@ def render_html(
         tr.appendChild(buildCell("AA", getOverallRowValue(row, "AA"), false, "AA"));
         body.appendChild(tr);
       }});
+    }}
+
+    function renderMainOverallChart() {{
+      const container = document.getElementById("main_overall_chart");
+      if (!container || typeof Plotly === "undefined") {{
+        return;
+      }}
+      const selectedModels = Array.from(getSelectedModels());
+      const rowIndex = {{}};
+      mainRowsAggregated.forEach((row) => {{
+        rowIndex[row.model] = row;
+      }});
+      const models = selectedModels.filter((model) => rowIndex[model]);
+      container.innerHTML = "";
+      if (!models.length) {{
+        const empty = document.createElement("div");
+        empty.className = "note";
+        empty.textContent = "No data available for the current selection.";
+        container.appendChild(empty);
+        return;
+      }}
+
+      const useExcl = isExcludeWebSearch();
+      const traces = conditions.map((condition) => {{
+        const y = [];
+        const plus = [];
+        const minus = [];
+        models.forEach((model) => {{
+          const row = rowIndex[model];
+          const value = getOverallRowValue(row, condition);
+          y.push(isNumber(value) ? value : null);
+          const minKey = useExcl ? `${{condition}}_excl_web_min` : `${{condition}}_min`;
+          const maxKey = useExcl ? `${{condition}}_excl_web_max` : `${{condition}}_max`;
+          const minVal = row[minKey];
+          const maxVal = row[maxKey];
+          if (isNumber(value) && isNumber(minVal) && isNumber(maxVal)) {{
+            plus.push(Math.max(0, maxVal - value));
+            minus.push(Math.max(0, value - minVal));
+          }} else {{
+            plus.push(0);
+            minus.push(0);
+          }}
+        }});
+        const hasError = plus.some((v) => v > 0) || minus.some((v) => v > 0);
+        return {{
+          name: condition,
+          type: "bar",
+          x: models,
+          y,
+          error_y: {{
+            type: "data",
+            array: plus,
+            arrayminus: minus,
+            visible: hasError,
+            color: "#2f3a56",
+            thickness: 1
+          }},
+        }};
+      }});
+
+      const layout = {{
+        barmode: "group",
+        margin: {{ t: 20, l: 60, r: 20, b: 120 }},
+        xaxis: {{ tickangle: -30 }},
+        yaxis: {{ title: "Overall Acc" }},
+        legend: {{ orientation: "h", y: -0.2 }}
+      }};
+      Plotly.newPlot(container, traces, layout, {{ displayModeBar: false }});
     }}
 
     function getSortValueMain(row, key, mode) {{
@@ -1608,17 +1890,25 @@ def render_html(
     function renderAllTables() {{
       const selectedTable = document.getElementById("tableSelect").value;
       const mainSection = document.querySelector(".table-wrap");
+      const mainChart = document.getElementById("mainOverallSection");
       const note = document.getElementById("note");
       if (selectedTable === "main" || selectedTable === "all") {{
         mainSection.style.display = "";
+        if (mainChart) {{
+          mainChart.style.display = "";
+        }}
         note.style.display = "";
         renderMainTable();
+        renderMainOverallChart();
         const mainTable = document.querySelector("table[data-table-key='main']");
         if (mainTable) {{
           updateSortIndicators(mainTable, "main");
         }}
       }} else {{
         mainSection.style.display = "none";
+        if (mainChart) {{
+          mainChart.style.display = "none";
+        }}
         note.style.display = "none";
       }}
       renderDetailTables();
@@ -2886,12 +3176,13 @@ def main() -> int:
     table = compute_deltas(wide)
     overall_excl_web = compute_overall_excl_web(data_map)
     rows = make_rows(table, overall_excl_web)
+    aggregated_rows = build_aggregated_main_rows(root, data_map)
     category_tables = build_category_tables(data_map, mode="full")
     summary_tables = build_category_tables(data_map, mode="summary")
     all_models = sorted(
         {
             row["model"]
-            for row in rows
+            for row in rows + aggregated_rows
         }.union(
             {
                 detail_row["model"]
@@ -2904,6 +3195,7 @@ def main() -> int:
     error_records, error_groups = build_error_summary(root, data_map)
     html = render_html(
         rows,
+        aggregated_rows,
         missing_conditions,
         category_tables,
         summary_tables,
