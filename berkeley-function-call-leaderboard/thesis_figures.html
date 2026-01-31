@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Thesis Figures</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: "Times New Roman", Georgia, serif;
+      color: #111;
+      background: #ffffff;
+    }
+    .figure {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    #thesis_main_result,
+    #thesis_main_result_excl_web {
+      width: 100%;
+      height: 420px;
+    }
+    .caption {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #333;
+    }
+    .figure + .figure {
+      margin-top: 32px;
+    }
+    .plot-controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+      font-size: 14px;
+    }
+    .plot-warning {
+      margin: 8px 0;
+      color: #9c2c2c;
+      font-size: 13px;
+    }
+    .scatter-panel {
+      margin-top: 12px;
+    }
+    .movers-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .movers-table th,
+    .movers-table td {
+      border: 1px solid #d5d5d5;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    .movers-table th {
+      background: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+  <div class="figure">
+    <div id="thesis_main_result"></div>
+    <div class="caption">Mean across runs; error bars show min–max. Includes web-search tasks.</div>
+  </div>
+  <div class="figure">
+    <div id="thesis_main_result_excl_web"></div>
+    <div class="caption">Mean across runs; error bars show min–max. Overall accuracy excluding web-search tasks.</div>
+  </div>
+  <div class="figure">
+    <div id="thesis_error_mix_plot"></div>
+    <div class="caption">
+      Error distribution (share of incorrect outputs). Multi-label errors can push raw shares above 100%; bars are normalized to 100%.
+    </div>
+  </div>
+  <div class="figure">
+    <div class="plot-warning" id="thesisErrorHeatmapWarning"></div>
+    <div id="thesis_error_heatmap_plot"></div>
+    <div class="caption">
+      Error shift heatmap (delta pp) for top-moving rows; tables list top movers by absolute delta.
+    </div>
+  </div>
+  <div class="figure">
+    <div id="thesis_scatter_facets"></div>
+    <div class="caption">
+      Baseline (OO) vs delta accuracy faceted by combo; y-axis in percentage points.
+    </div>
+  </div>
+  <div class="figure">
+    <div class="plot-controls">
+      <label>Comparison
+        <select id="thesisErrorShiftCombo">
+          <option value="AA">AA - OO</option>
+          <option value="OA">OA - OO</option>
+          <option value="AO">AO - OO</option>
+        </select>
+      </label>
+    </div>
+    <div class="plot-warning" id="thesisErrorShiftWarning"></div>
+    <div id="thesis_error_shift_plot"></div>
+    <div class="caption">
+      Rates are error_count / total_tasks for the slice; multi-label errors can sum &gt; 100%.
+    </div>
+  </div>
+  <script>
+    const thesisData = [{"type": "scatter", "mode": "markers", "name": "OO", "x": [-0.27, 0.73, 1.73], "y": [48.93, 51.56, 42.349999999999994], "marker": {"size": 9, "color": "#2b6cb0"}, "customdata": ["Azure gpt-4o (FC)", "Azure gpt-5-mini (FC)", "Azure gpt-5.1-responses (FC)"], "error_y": {"type": "data", "array": [0.46000000000000085, 0.0, 1.2000000000000028], "arrayminus": [0.46000000000000085, 0.0, 1.1999999999999957], "visible": true, "thickness": 1, "width": 4}}, {"type": "scatter", "mode": "markers", "name": "OA", "x": [-0.09, 1.91], "y": [43.32, 41.67], "marker": {"size": 9, "color": "#2f855a"}, "customdata": ["Azure gpt-4o (FC)", "Azure gpt-5.1-responses (FC)"]}, {"type": "scatter", "mode": "markers", "name": "AO", "x": [0.09, 2.09], "y": [50.38, 49.11], "marker": {"size": 9, "color": "#c05621"}, "customdata": ["Azure gpt-4o (FC)", "Azure gpt-5.1-responses (FC)"]}, {"type": "scatter", "mode": "markers", "name": "AA", "x": [0.27, 1.27, 2.27], "y": [50.67, 51.65, 50.35], "marker": {"size": 9, "color": "#6b46c1"}, "customdata": ["Azure gpt-4o (FC)", "Azure gpt-5-mini (FC)", "Azure gpt-5.1-responses (FC)"], "error_y": {"type": "data", "array": [0.7199999999999989, 0.0, 0.0], "arrayminus": [0.7199999999999989, 0.0, 0.0], "visible": true, "thickness": 1, "width": 4}}];
+    const thesisLayout = {"margin": {"l": 70, "r": 30, "t": 20, "b": 80}, "xaxis": {"title": "", "tickvals": [0, 1, 2], "ticktext": ["GPT-4o", "GPT-5 mini", "GPT-5.1"], "tickangle": 0, "showgrid": false, "zeroline": false}, "yaxis": {"title": "Overall accuracy", "range": [40.5, 52.5], "showgrid": true, "gridcolor": "rgba(0,0,0,0.08)", "zeroline": false}, "legend": {"orientation": "h", "x": 0.5, "xanchor": "center", "y": -0.2}, "annotations": [{"x": 0.30000000000000004, "y": 50.79, "text": "+1.7pp", "showarrow": false, "font": {"size": 11, "color": "#444"}, "xanchor": "left", "yanchor": "bottom"}, {"x": 2.3, "y": 50.47, "text": "+8.0pp", "showarrow": false, "font": {"size": 11, "color": "#444"}, "xanchor": "left", "yanchor": "bottom"}], "plot_bgcolor": "#ffffff", "paper_bgcolor": "#ffffff"};
+    Plotly.newPlot("thesis_main_result", thesisData, thesisLayout, { displayModeBar: false });
+    const thesisExclWebData = [{"type": "scatter", "mode": "markers", "name": "OO", "x": [-0.27, 0.73, 1.73], "y": [46.2235, 46.507999999999996, 43.202999999999996], "marker": {"size": 9, "color": "#2b6cb0"}, "customdata": ["Azure gpt-4o (FC)", "Azure gpt-5-mini (FC)", "Azure gpt-5.1-responses (FC)"], "error_y": {"type": "data", "array": [1.295499999999997, 0.0, 0.0], "arrayminus": [1.295499999999997, 0.0, 0.0], "visible": true, "thickness": 1, "width": 4}}, {"type": "scatter", "mode": "markers", "name": "OA", "x": [-0.09, 1.91], "y": [48.261, 46.638000000000005], "marker": {"size": 9, "color": "#2f855a"}, "customdata": ["Azure gpt-4o (FC)", "Azure gpt-5.1-responses (FC)"]}, {"type": "scatter", "mode": "markers", "name": "AO", "x": [0.09, 2.09], "y": [47.611000000000004, 45.961999999999996], "marker": {"size": 9, "color": "#c05621"}, "customdata": ["Azure gpt-4o (FC)", "Azure gpt-5.1-responses (FC)"]}, {"type": "scatter", "mode": "markers", "name": "AA", "x": [0.27, 1.27, 2.27], "y": [48.213, 44.355, 45.93600000000001], "marker": {"size": 9, "color": "#6b46c1"}, "customdata": ["Azure gpt-4o (FC)", "Azure gpt-5-mini (FC)", "Azure gpt-5.1-responses (FC)"], "error_y": {"type": "data", "array": [0.36599999999999255, 0.0, 0.0], "arrayminus": [0.36599999999999255, 0.0, 0.0], "visible": true, "thickness": 1, "width": 4}}];
+    const thesisExclWebLayout = {"margin": {"l": 70, "r": 30, "t": 20, "b": 80}, "xaxis": {"title": "", "tickvals": [0, 1, 2], "ticktext": ["GPT-4o", "GPT-5 mini", "GPT-5.1"], "tickangle": 0, "showgrid": false, "zeroline": false}, "yaxis": {"title": "Overall accuracy", "range": [42.5, 49.5], "showgrid": true, "gridcolor": "rgba(0,0,0,0.08)", "zeroline": false}, "legend": {"orientation": "h", "x": 0.5, "xanchor": "center", "y": -0.2}, "annotations": [{"x": 0.30000000000000004, "y": 48.333, "text": "+2.0pp", "showarrow": false, "font": {"size": 11, "color": "#444"}, "xanchor": "left", "yanchor": "bottom"}, {"x": 1.3, "y": 44.474999999999994, "text": "-2.2pp", "showarrow": false, "font": {"size": 11, "color": "#444"}, "xanchor": "left", "yanchor": "bottom"}, {"x": 2.3, "y": 46.056000000000004, "text": "+2.7pp", "showarrow": false, "font": {"size": 11, "color": "#444"}, "xanchor": "left", "yanchor": "bottom"}], "plot_bgcolor": "#ffffff", "paper_bgcolor": "#ffffff"};
+    Plotly.newPlot("thesis_main_result_excl_web", thesisExclWebData, thesisExclWebLayout, { displayModeBar: false });
+
+    const thesisErrorRecords = [{"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 66, "errors": {"WRONG_ARGS": 65, "OTHER": 1}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 82, "errors": {"WRONG_ARGS": 80, "OTHER": 2}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 132, "errors": {"WRONG_ARGS": 132}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 109, "errors": {"WRONG_ARGS": 109}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 119, "errors": {"WRONG_ARGS": 119}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 180, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 180}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 308, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 217, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 26, "OTHER": 63}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 7, "errors": {"VALUE_FORMAT_ERROR": 4, "OTHER": 3}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 6, "errors": {"VALUE_FORMAT_ERROR": 6}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 3, "errors": {"INVALID_JSON_OR_SCHEMA": 3}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "live_simple", "total": 258, "incorrect": 75, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 3, "VALUE_FORMAT_ERROR": 49, "WRONG_ARGS": 3, "INVALID_JSON_OR_SCHEMA": 7, "OTHER": 14}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 95, "errors": {"WRONG_ARGS": 51, "OTHER": 44}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 103, "errors": {"WRONG_ARGS": 59, "OTHER": 44}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 134, "errors": {"WRONG_ARGS": 65, "OTHER": 69}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 135, "errors": {"WRONG_ARGS": 75, "OTHER": 60}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 35, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 35}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "multiple", "total": 200, "incorrect": 18, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 9, "INVALID_JSON_OR_SCHEMA": 3, "OTHER": 5}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 41, "errors": {"MISSING_REQUIRED_ARGS": 2, "TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 23, "OTHER": 15}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "parallel", "total": 200, "incorrect": 18, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 8, "OTHER": 9}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 13, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 5, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 2, "OTHER": 4}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "simple_java", "total": 100, "incorrect": 33, "errors": {"VALUE_FORMAT_ERROR": 12, "WRONG_ARGS": 21, "INVALID_JSON_OR_SCHEMA": 1, "OTHER": 1}}, {"condition": "OO", "model": "Azure gpt-4o (FC)", "test_category": "simple_python", "total": 400, "incorrect": 39, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 4, "VALUE_FORMAT_ERROR": 18, "INVALID_JSON_OR_SCHEMA": 2, "OTHER": 14}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 33, "errors": {"WRONG_ARGS": 30, "OTHER": 3}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 30, "errors": {"WRONG_ARGS": 29, "OTHER": 1}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 109, "errors": {"WRONG_ARGS": 106, "OTHER": 3}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 75, "errors": {"WRONG_ARGS": 74, "OTHER": 1}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 94, "errors": {"WRONG_ARGS": 92, "OTHER": 2}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 89, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 89}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 428, "errors": {"VALUE_FORMAT_ERROR": 177, "INVALID_JSON_OR_SCHEMA": 201, "OTHER": 50}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 12, "errors": {"VALUE_FORMAT_ERROR": 7, "INVALID_JSON_OR_SCHEMA": 1, "OTHER": 4}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 7, "errors": {"VALUE_FORMAT_ERROR": 4, "INVALID_JSON_OR_SCHEMA": 3}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 6, "errors": {"INVALID_JSON_OR_SCHEMA": 6}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "live_simple", "total": 258, "incorrect": 105, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 2, "VALUE_FORMAT_ERROR": 50, "WRONG_ARGS": 2, "INVALID_JSON_OR_SCHEMA": 46, "OTHER": 7}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 140, "errors": {"WRONG_ARGS": 62, "OTHER": 78}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 142, "errors": {"WRONG_ARGS": 71, "OTHER": 71}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 180, "errors": {"WRONG_ARGS": 49, "OTHER": 131}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 162, "errors": {"WRONG_ARGS": 65, "OTHER": 97}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 23, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 23}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "multiple", "total": 200, "incorrect": 59, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 28, "INVALID_JSON_OR_SCHEMA": 26, "OTHER": 4}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 56, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 33, "INVALID_JSON_OR_SCHEMA": 5, "OTHER": 16}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "parallel", "total": 200, "incorrect": 39, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 21, "INVALID_JSON_OR_SCHEMA": 14, "OTHER": 3}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 26, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 8, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 12, "OTHER": 4}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "simple_java", "total": 100, "incorrect": 43, "errors": {"VALUE_FORMAT_ERROR": 18, "WRONG_ARGS": 19, "INVALID_JSON_OR_SCHEMA": 9}}, {"condition": "OO", "model": "Azure gpt-5-mini (FC)", "test_category": "simple_python", "total": 400, "incorrect": 85, "errors": {"TYPE_MISMATCH": 2, "VALUE_FORMAT_ERROR": 37, "INVALID_JSON_OR_SCHEMA": 38, "OTHER": 8}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 65, "errors": {"WRONG_ARGS": 65}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 77, "errors": {"WRONG_ARGS": 77}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 128, "errors": {"WRONG_ARGS": 128}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 75, "errors": {"WRONG_ARGS": 75}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 118, "errors": {"WRONG_ARGS": 118}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 139, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 139}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 391, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 262, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 76, "OTHER": 51}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 9, "errors": {"VALUE_FORMAT_ERROR": 6, "OTHER": 3}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 6, "errors": {"VALUE_FORMAT_ERROR": 6}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 4, "errors": {"INVALID_JSON_OR_SCHEMA": 4}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_simple", "total": 258, "incorrect": 87, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 3, "VALUE_FORMAT_ERROR": 61, "WRONG_ARGS": 4, "INVALID_JSON_OR_SCHEMA": 14, "OTHER": 7}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 121, "errors": {"WRONG_ARGS": 54, "OTHER": 67}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 136, "errors": {"WRONG_ARGS": 69, "OTHER": 67}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 144, "errors": {"WRONG_ARGS": 57, "OTHER": 87}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 147, "errors": {"WRONG_ARGS": 72, "OTHER": 75}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 30, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 30}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multiple", "total": 200, "incorrect": 21, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 14, "INVALID_JSON_OR_SCHEMA": 2, "OTHER": 4}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 42, "errors": {"MISSING_REQUIRED_ARGS": 2, "TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 27, "OTHER": 12}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "parallel", "total": 200, "incorrect": 26, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 18, "OTHER": 7}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 19, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 9, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 6, "OTHER": 2}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_java", "total": 100, "incorrect": 38, "errors": {"VALUE_FORMAT_ERROR": 15, "WRONG_ARGS": 22, "INVALID_JSON_OR_SCHEMA": 3}}, {"condition": "OO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_python", "total": 400, "incorrect": 47, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 4, "VALUE_FORMAT_ERROR": 37, "INVALID_JSON_OR_SCHEMA": 2, "OTHER": 3}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 97, "errors": {"WRONG_ARGS": 96, "OTHER": 1}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 93, "errors": {"WRONG_ARGS": 89, "OTHER": 4}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 130, "errors": {"WRONG_ARGS": 130}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 77, "errors": {"WRONG_ARGS": 77}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 120, "errors": {"WRONG_ARGS": 120}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 184, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 184}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 305, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 216, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 27, "OTHER": 60}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 9, "errors": {"VALUE_FORMAT_ERROR": 7, "OTHER": 2}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 6, "errors": {"VALUE_FORMAT_ERROR": 6}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 2, "errors": {"INVALID_JSON_OR_SCHEMA": 2}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "live_simple", "total": 258, "incorrect": 77, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 3, "VALUE_FORMAT_ERROR": 51, "WRONG_ARGS": 3, "INVALID_JSON_OR_SCHEMA": 7, "OTHER": 14}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 96, "errors": {"WRONG_ARGS": 51, "OTHER": 45}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 102, "errors": {"WRONG_ARGS": 59, "OTHER": 43}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 131, "errors": {"WRONG_ARGS": 66, "OTHER": 65}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 133, "errors": {"WRONG_ARGS": 71, "OTHER": 62}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 38, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 38}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "multiple", "total": 200, "incorrect": 17, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 8, "INVALID_JSON_OR_SCHEMA": 3, "OTHER": 5}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 40, "errors": {"MISSING_REQUIRED_ARGS": 2, "TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 23, "OTHER": 14}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "parallel", "total": 200, "incorrect": 18, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 9, "OTHER": 8}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 13, "errors": {"VALUE_FORMAT_ERROR": 3, "WRONG_ARGS": 3, "INVALID_JSON_OR_SCHEMA": 2, "OTHER": 5}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "simple_java", "total": 100, "incorrect": 33, "errors": {"VALUE_FORMAT_ERROR": 12, "WRONG_ARGS": 21, "INVALID_JSON_OR_SCHEMA": 1, "OTHER": 1}}, {"condition": "OA", "model": "Azure gpt-4o (FC)", "test_category": "simple_python", "total": 400, "incorrect": 41, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 4, "VALUE_FORMAT_ERROR": 18, "INVALID_JSON_OR_SCHEMA": 3, "OTHER": 15}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 87, "errors": {"WRONG_ARGS": 87}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 90, "errors": {"WRONG_ARGS": 90}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 116, "errors": {"WRONG_ARGS": 116}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 55, "errors": {"WRONG_ARGS": 55}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 125, "errors": {"WRONG_ARGS": 125}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 138, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 138}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 390, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 267, "INVALID_JSON_OR_SCHEMA": 71, "OTHER": 51}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 9, "errors": {"VALUE_FORMAT_ERROR": 6, "OTHER": 3}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 6, "errors": {"VALUE_FORMAT_ERROR": 6}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 3, "errors": {"INVALID_JSON_OR_SCHEMA": 3}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_simple", "total": 258, "incorrect": 83, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 3, "VALUE_FORMAT_ERROR": 62, "WRONG_ARGS": 2, "INVALID_JSON_OR_SCHEMA": 11, "OTHER": 7}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 126, "errors": {"WRONG_ARGS": 64, "OTHER": 62}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 133, "errors": {"WRONG_ARGS": 65, "OTHER": 68}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 150, "errors": {"WRONG_ARGS": 65, "OTHER": 85}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 152, "errors": {"WRONG_ARGS": 77, "OTHER": 75}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 29, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 29}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multiple", "total": 200, "incorrect": 26, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 18, "INVALID_JSON_OR_SCHEMA": 3, "OTHER": 4}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 44, "errors": {"MISSING_REQUIRED_ARGS": 2, "TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 31, "OTHER": 10}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "parallel", "total": 200, "incorrect": 25, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 16, "OTHER": 8}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 17, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 9, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 4, "OTHER": 2}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_java", "total": 100, "incorrect": 36, "errors": {"VALUE_FORMAT_ERROR": 15, "WRONG_ARGS": 21, "INVALID_JSON_OR_SCHEMA": 2}}, {"condition": "OA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_python", "total": 400, "incorrect": 45, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 4, "VALUE_FORMAT_ERROR": 34, "INVALID_JSON_OR_SCHEMA": 2, "OTHER": 4}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 57, "errors": {"WRONG_ARGS": 51, "OTHER": 6}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 59, "errors": {"WRONG_ARGS": 54, "OTHER": 5}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 128, "errors": {"WRONG_ARGS": 128}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 88, "errors": {"WRONG_ARGS": 88}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 118, "errors": {"WRONG_ARGS": 118}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 165, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 165}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 337, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 240, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 34, "OTHER": 61}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 8, "errors": {"VALUE_FORMAT_ERROR": 5, "OTHER": 3}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 4, "errors": {"VALUE_FORMAT_ERROR": 4}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 3, "errors": {"INVALID_JSON_OR_SCHEMA": 3}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "live_simple", "total": 258, "incorrect": 86, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 3, "VALUE_FORMAT_ERROR": 53, "WRONG_ARGS": 2, "INVALID_JSON_OR_SCHEMA": 15, "OTHER": 14}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 94, "errors": {"WRONG_ARGS": 49, "OTHER": 45}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 103, "errors": {"WRONG_ARGS": 59, "OTHER": 44}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 135, "errors": {"WRONG_ARGS": 55, "OTHER": 80}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 131, "errors": {"WRONG_ARGS": 73, "OTHER": 58}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 22, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 22}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "multiple", "total": 200, "incorrect": 23, "errors": {"VALUE_FORMAT_ERROR": 10, "INVALID_JSON_OR_SCHEMA": 6, "OTHER": 7}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 42, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 26, "OTHER": 15}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "parallel", "total": 200, "incorrect": 18, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 13, "OTHER": 4}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 15, "errors": {"VALUE_FORMAT_ERROR": 7, "WRONG_ARGS": 2, "INVALID_JSON_OR_SCHEMA": 1, "OTHER": 5}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "simple_java", "total": 100, "incorrect": 34, "errors": {"VALUE_FORMAT_ERROR": 13, "WRONG_ARGS": 21, "INVALID_JSON_OR_SCHEMA": 1, "OTHER": 1}}, {"condition": "AO", "model": "Azure gpt-4o (FC)", "test_category": "simple_python", "total": 400, "incorrect": 53, "errors": {"TYPE_MISMATCH": 4, "VALUE_FORMAT_ERROR": 27, "INVALID_JSON_OR_SCHEMA": 5, "OTHER": 17}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 45, "errors": {"WRONG_ARGS": 45}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 53, "errors": {"WRONG_ARGS": 53}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 116, "errors": {"WRONG_ARGS": 116}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 60, "errors": {"WRONG_ARGS": 60}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 125, "errors": {"WRONG_ARGS": 125}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 109, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 109}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 398, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 221, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 134, "OTHER": 41}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 9, "errors": {"VALUE_FORMAT_ERROR": 6, "OTHER": 3}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 5, "errors": {"VALUE_FORMAT_ERROR": 4, "OTHER": 1}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 4, "errors": {"INVALID_JSON_OR_SCHEMA": 4}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_simple", "total": 258, "incorrect": 104, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 3, "VALUE_FORMAT_ERROR": 64, "WRONG_ARGS": 2, "INVALID_JSON_OR_SCHEMA": 30, "OTHER": 7}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 129, "errors": {"WRONG_ARGS": 67, "OTHER": 62}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 143, "errors": {"WRONG_ARGS": 75, "OTHER": 68}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 143, "errors": {"WRONG_ARGS": 61, "OTHER": 82}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 151, "errors": {"WRONG_ARGS": 72, "OTHER": 79}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 19, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 19}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multiple", "total": 200, "incorrect": 28, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 19, "INVALID_JSON_OR_SCHEMA": 7, "OTHER": 1}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 51, "errors": {"MISSING_REQUIRED_ARGS": 2, "TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 37, "OTHER": 11}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "parallel", "total": 200, "incorrect": 35, "errors": {"VALUE_FORMAT_ERROR": 28, "INVALID_JSON_OR_SCHEMA": 1, "OTHER": 6}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 14, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 5, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 6, "OTHER": 1}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_java", "total": 100, "incorrect": 36, "errors": {"VALUE_FORMAT_ERROR": 10, "WRONG_ARGS": 22, "INVALID_JSON_OR_SCHEMA": 6}}, {"condition": "AO", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_python", "total": 400, "incorrect": 63, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 4, "VALUE_FORMAT_ERROR": 44, "INVALID_JSON_OR_SCHEMA": 13, "OTHER": 1}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 61, "errors": {"WRONG_ARGS": 58, "OTHER": 3}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 88, "errors": {"WRONG_ARGS": 87, "OTHER": 1}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 124, "errors": {"WRONG_ARGS": 124}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 73, "errors": {"WRONG_ARGS": 73}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 121, "errors": {"WRONG_ARGS": 121}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 164, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 164}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 336, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 236, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 41, "OTHER": 57}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 8, "errors": {"VALUE_FORMAT_ERROR": 6, "OTHER": 2}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 5, "errors": {"VALUE_FORMAT_ERROR": 5}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 2, "errors": {"INVALID_JSON_OR_SCHEMA": 2}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "live_simple", "total": 258, "incorrect": 82, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 2, "VALUE_FORMAT_ERROR": 51, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 13, "OTHER": 15}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 88, "errors": {"WRONG_ARGS": 48, "OTHER": 40}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 98, "errors": {"WRONG_ARGS": 59, "OTHER": 39}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 131, "errors": {"WRONG_ARGS": 58, "OTHER": 73}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 126, "errors": {"WRONG_ARGS": 71, "OTHER": 55}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 29, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 29}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "multiple", "total": 200, "incorrect": 23, "errors": {"VALUE_FORMAT_ERROR": 14, "INVALID_JSON_OR_SCHEMA": 3, "OTHER": 6}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 40, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 27, "OTHER": 12}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "parallel", "total": 200, "incorrect": 16, "errors": {"VALUE_FORMAT_ERROR": 9, "OTHER": 7}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 14, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 6, "WRONG_ARGS": 1, "INVALID_JSON_OR_SCHEMA": 3, "OTHER": 3}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "simple_java", "total": 100, "incorrect": 35, "errors": {"VALUE_FORMAT_ERROR": 13, "WRONG_ARGS": 23, "INVALID_JSON_OR_SCHEMA": 1}}, {"condition": "AA", "model": "Azure gpt-4o (FC)", "test_category": "simple_python", "total": 400, "incorrect": 52, "errors": {"TYPE_MISMATCH": 4, "VALUE_FORMAT_ERROR": 27, "INVALID_JSON_OR_SCHEMA": 5, "OTHER": 16}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 23, "errors": {"WRONG_ARGS": 23}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 21, "errors": {"WRONG_ARGS": 19, "OTHER": 2}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 104, "errors": {"WRONG_ARGS": 104}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 68, "errors": {"WRONG_ARGS": 68}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 100, "errors": {"WRONG_ARGS": 100}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 76, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 76}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 427, "errors": {"VALUE_FORMAT_ERROR": 175, "INVALID_JSON_OR_SCHEMA": 198, "OTHER": 54}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 13, "errors": {"VALUE_FORMAT_ERROR": 7, "INVALID_JSON_OR_SCHEMA": 1, "OTHER": 5}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 8, "errors": {"VALUE_FORMAT_ERROR": 4, "INVALID_JSON_OR_SCHEMA": 3, "OTHER": 1}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 6, "errors": {"INVALID_JSON_OR_SCHEMA": 6}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "live_simple", "total": 258, "incorrect": 111, "errors": {"TYPE_MISMATCH": 3, "VALUE_FORMAT_ERROR": 51, "WRONG_ARGS": 2, "INVALID_JSON_OR_SCHEMA": 51, "OTHER": 7}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 150, "errors": {"WRONG_ARGS": 73, "OTHER": 77}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 150, "errors": {"WRONG_ARGS": 74, "OTHER": 76}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 181, "errors": {"WRONG_ARGS": 43, "OTHER": 138}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 167, "errors": {"WRONG_ARGS": 63, "OTHER": 104}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 18, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 18}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "multiple", "total": 200, "incorrect": 53, "errors": {"VALUE_FORMAT_ERROR": 33, "INVALID_JSON_OR_SCHEMA": 19, "OTHER": 1}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 65, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 38, "INVALID_JSON_OR_SCHEMA": 6, "OTHER": 20}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "parallel", "total": 200, "incorrect": 40, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 22, "INVALID_JSON_OR_SCHEMA": 11, "OTHER": 6}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 28, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 12, "WRONG_ARGS": 3, "INVALID_JSON_OR_SCHEMA": 8, "OTHER": 4}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "simple_java", "total": 100, "incorrect": 44, "errors": {"VALUE_FORMAT_ERROR": 20, "WRONG_ARGS": 18, "INVALID_JSON_OR_SCHEMA": 8, "OTHER": 1}}, {"condition": "AA", "model": "Azure gpt-5-mini (FC)", "test_category": "simple_python", "total": 400, "incorrect": 95, "errors": {"TYPE_MISMATCH": 3, "VALUE_FORMAT_ERROR": 47, "INVALID_JSON_OR_SCHEMA": 40, "OTHER": 5}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "web_search_base", "total": 100, "incorrect": 46, "errors": {"WRONG_ARGS": 45, "OTHER": 1}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "web_search_no_snippet", "total": 100, "incorrect": 38, "errors": {"WRONG_ARGS": 38}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_kv", "total": 155, "incorrect": 122, "errors": {"WRONG_ARGS": 122}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_rec_sum", "total": 155, "incorrect": 55, "errors": {"WRONG_ARGS": 55}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "memory_vector", "total": 155, "incorrect": 121, "errors": {"WRONG_ARGS": 121}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_irrelevance", "total": 884, "incorrect": 111, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 111}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_multiple", "total": 1053, "incorrect": 402, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 220, "INVALID_JSON_OR_SCHEMA": 139, "OTHER": 42}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_parallel_multiple", "total": 24, "incorrect": 8, "errors": {"VALUE_FORMAT_ERROR": 6, "OTHER": 2}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_parallel", "total": 16, "incorrect": 5, "errors": {"VALUE_FORMAT_ERROR": 5}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_relevance", "total": 16, "incorrect": 6, "errors": {"INVALID_JSON_OR_SCHEMA": 6}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "live_simple", "total": 258, "incorrect": 105, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 2, "VALUE_FORMAT_ERROR": 60, "WRONG_ARGS": 3, "INVALID_JSON_OR_SCHEMA": 34, "OTHER": 7}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_base", "total": 200, "incorrect": 127, "errors": {"WRONG_ARGS": 60, "OTHER": 67}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_long_context", "total": 200, "incorrect": 143, "errors": {"WRONG_ARGS": 76, "OTHER": 67}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_miss_func", "total": 200, "incorrect": 147, "errors": {"WRONG_ARGS": 64, "OTHER": 83}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multi_turn_miss_param", "total": 200, "incorrect": 156, "errors": {"WRONG_ARGS": 70, "OTHER": 86}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "irrelevance", "total": 240, "incorrect": 19, "errors": {"SHOULD_ABSTAIN_BUT_CALLED": 19}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "multiple", "total": 200, "incorrect": 25, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 16, "INVALID_JSON_OR_SCHEMA": 7, "OTHER": 1}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "parallel_multiple", "total": 200, "incorrect": 47, "errors": {"MISSING_REQUIRED_ARGS": 2, "TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 36, "OTHER": 8}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "parallel", "total": 200, "incorrect": 36, "errors": {"MISSING_REQUIRED_ARGS": 1, "VALUE_FORMAT_ERROR": 30, "INVALID_JSON_OR_SCHEMA": 1, "OTHER": 4}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_javascript", "total": 50, "incorrect": 15, "errors": {"TYPE_MISMATCH": 1, "VALUE_FORMAT_ERROR": 3, "WRONG_ARGS": 2, "INVALID_JSON_OR_SCHEMA": 6, "OTHER": 3}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_java", "total": 100, "incorrect": 41, "errors": {"VALUE_FORMAT_ERROR": 14, "WRONG_ARGS": 22, "INVALID_JSON_OR_SCHEMA": 7}}, {"condition": "AA", "model": "Azure gpt-5.1-responses (FC)", "test_category": "simple_python", "total": 400, "incorrect": 61, "errors": {"MISSING_REQUIRED_ARGS": 1, "TYPE_MISMATCH": 4, "VALUE_FORMAT_ERROR": 40, "INVALID_JSON_OR_SCHEMA": 15, "OTHER": 1}}];
+    const thesisErrorTypes = ["WRONG_TOOL", "HALLUCINATED_TOOL", "SHOULD_ABSTAIN_BUT_CALLED", "SHOULD_CALL_BUT_ABSTAINED", "MISSING_REQUIRED_ARGS", "EXTRA_ARGS", "TYPE_MISMATCH", "VALUE_FORMAT_ERROR", "WRONG_ARGS", "INVALID_JSON_OR_SCHEMA", "OTHER"];
+    const thesisErrorGroups = {"data_non_live": {"Non-Live Overall Acc": ["simple_python", "simple_java", "simple_javascript", "multiple", "parallel", "parallel_multiple"], "AST Summary": ["simple_python", "simple_java", "simple_javascript", "multiple", "parallel", "parallel_multiple"], "Simple AST": ["simple_python", "simple_java", "simple_javascript"], "Python Simple AST": ["simple_python"], "Java Simple AST": ["simple_java"], "JavaScript Simple AST": ["simple_javascript"], "Multiple AST": ["multiple"], "Parallel AST": ["parallel"], "Parallel Multiple AST": ["parallel_multiple"], "Irrelevance Detection": ["irrelevance"]}, "data_live": {"Live Overall Acc": ["live_simple", "live_multiple", "live_parallel", "live_parallel_multiple"], "AST Summary": ["live_simple", "live_multiple", "live_parallel", "live_parallel_multiple"], "Python Simple AST": ["live_simple"], "Python Multiple AST": ["live_multiple"], "Python Parallel AST": ["live_parallel"], "Python Parallel Multiple AST": ["live_parallel_multiple"], "Irrelevance Detection": ["live_irrelevance"], "Relevance Detection": ["live_relevance"]}, "data_multi_turn": {"Multi Turn Overall Acc": ["multi_turn_base", "multi_turn_miss_func", "multi_turn_miss_param", "multi_turn_long_context"], "Base": ["multi_turn_base"], "Miss Func": ["multi_turn_miss_func"], "Miss Param": ["multi_turn_miss_param"], "Long Context": ["multi_turn_long_context"]}, "data_agentic": {"Agentic Overall Acc": ["web_search_base", "web_search_no_snippet", "memory_kv", "memory_vector", "memory_rec_sum"], "Web Search Summary": ["web_search_base", "web_search_no_snippet"], "Web Search Base": ["web_search_base"], "Web Search No Snippet": ["web_search_no_snippet"], "Memory Summary": ["memory_kv", "memory_vector", "memory_rec_sum"], "Memory KV": ["memory_kv"], "Memory Vector": ["memory_vector"], "Memory Recursive Summarization": ["memory_rec_sum"]}, "data_agentic-web": {"Web Search Summary": ["web_search_base", "web_search_no_snippet"], "Web Search Base": ["web_search_base"], "Web Search No Snippet": ["web_search_no_snippet"]}, "data_agentic-memory": {"Memory Summary": ["memory_kv", "memory_vector", "memory_rec_sum"], "Memory KV": ["memory_kv"], "Memory Vector": ["memory_vector"], "Memory Recursive Summarization": ["memory_rec_sum"]}};
+    const thesisTopShiftK = 5;
+    const thesisTopRows = 15;
+    const thesisTopMovers = 10;
+    const thesisScatterSpecs = [{"model": "Azure gpt-4o (FC)", "data": [{"type": "scatter", "mode": "markers", "x": [22.580771, 22.581248, 14.839561999999999, 23.231446000000002, 29.679145, 70.688518, 70.68963099999999, 70.93014400000001, 70.750333, 62.501077, 70.829205, 79.641266, 81.248722, 41.619751, 52.50132, 32.999526, 32.499583, 48.499394, 84.64952600000001, 84.649631, 77.079853, 90.250144, 67.000393, 73.999304, 90.998674, 90.998962, 79.501206, 85.421266], "y": [7.120560000000001, 7.133280000000002, 1.2783199999999992, -0.6114400000000021, 20.6172, -0.1195199999999983, -0.0898399999999983, -0.7661600000000103, 0.29888000000000625, 0.02872, -8.351199999999999, -0.41624000000000283, 6.21592, 0.6233600000000026, -0.4648, 1.48736, 0.98888, 0.48384, 0.18735999999998865, 0.19015999999998864, -0.1639199999999966, -0.49616, 0.010480000000000001, -0.01856, 0.46464, -0.02768, 0.53216, -1.21624], "marker": {"size": 5, "opacity": 0.22, "color": ["#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x", "yaxis": "y", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [22.580771, 22.581248, 14.839561999999999, 23.231446000000002, 29.679145, 70.688518, 70.68963099999999, 70.93014400000001, 70.750333, 62.501077, 70.829205, 79.641266, 81.248722, 41.619751, 52.50132, 32.999526, 32.499583, 48.499394, 84.64952600000001, 84.649631, 77.079853, 90.250144, 67.000393, 73.999304, 90.998674, 90.998962, 79.501206, 85.421266], "y": [7.120560000000001, 7.133280000000002, 1.2783199999999992, -0.6114400000000021, 20.6172, -0.1195199999999983, -0.0898399999999983, -0.7661600000000103, 0.29888000000000625, 0.02872, -8.351199999999999, -0.41624000000000283, 6.21592, 0.6233600000000026, -0.4648, 1.48736, 0.98888, 0.48384, 0.18735999999998865, 0.19015999999998864, -0.1639199999999966, -0.49616, 0.010480000000000001, -0.01856, 0.46464, -0.02768, 0.53216, -1.21624], "marker": {"size": 9, "opacity": 1.0, "color": ["#2f855a", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x", "yaxis": "y", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [22.580423, 22.579798999999998, 14.841194, 23.228872, 29.678611, 70.688932, 70.689682, 70.93129, 70.751251, 62.501017, 70.829517, 79.638818, 81.249502, 41.618899, 52.498803, 33.000567, 32.499232, 48.500045, 84.64960400000001, 84.64968200000001, 77.07918099999999, 90.25129, 67.001119, 73.999277, 90.99964, 91.001194, 79.499046, 85.418818], "y": [5.601280000000004, 5.584640000000004, 2.6118400000000017, 0.6099200000000006, 13.512959999999998, -2.9184800000000006, -2.8984800000000006, -4.225600000000005, -2.71664, 12.52712, -4.172879999999997, 1.6584799999999977, -0.013279999999999998, 0.47064, 0.46808, -0.48488, 1.97952, 0.0012000000000000012, -1.4705600000000079, -1.468480000000008, -2.8518399999999984, -3.4656, -0.97016, -4.01928, -2.5096, 0.03184, -0.52544, 5.378479999999996], "marker": {"size": 5, "opacity": 0.22, "color": ["#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x2", "yaxis": "y2", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [22.580423, 22.579798999999998, 14.841194, 23.228872, 29.678611, 70.688932, 70.689682, 70.93129, 70.751251, 62.501017, 70.829517, 79.638818, 81.249502, 41.618899, 52.498803, 33.000567, 32.499232, 48.500045, 84.64960400000001, 84.64968200000001, 77.07918099999999, 90.25129, 67.001119, 73.999277, 90.99964, 91.001194, 79.499046, 85.418818], "y": [5.601280000000004, 5.584640000000004, 2.6118400000000017, 0.6099200000000006, 13.512959999999998, -2.9184800000000006, -2.8984800000000006, -4.225600000000005, -2.71664, 12.52712, -4.172879999999997, 1.6584799999999977, -0.013279999999999998, 0.47064, 0.46808, -0.48488, 1.97952, 0.0012000000000000012, -1.4705600000000079, -1.468480000000008, -2.8518399999999984, -3.4656, -0.97016, -4.01928, -2.5096, 0.03184, -0.52544, 5.378479999999996], "marker": {"size": 9, "opacity": 1.0, "color": ["#2f855a", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "#2f855a", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x2", "yaxis": "y2", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [22.580111, 22.579438999999997, 14.839316, 23.228938, 29.680795, 70.689808, 70.691401, 70.930255, 70.750588, 62.498656, 70.830807, 79.638842, 81.250885, 41.619994, 52.499583, 32.998593, 32.500858, 48.499874, 84.650222, 84.651401, 77.080804, 90.250255, 67.000684, 73.998806, 90.99904, 90.999343, 79.499493, 85.418842], "y": [9.032960000000001, 9.01504, 5.1417600000000006, -1.318319999999999, 23.2412, -2.595120000000003, -2.5526400000000034, -2.703200000000008, -2.6443199999999965, 6.21416, -4.138479999999997, 1.7791200000000023, 6.2736, 2.99984, 3.48888, 1.46248, 4.52288, 2.49664, -0.8540799999999994, -0.8226399999999995, -2.3885599999999965, -3.2432, -1.98176, -2.03184, -2.5256, 0.98248, 0.48648, 2.46912], "marker": {"size": 5, "opacity": 0.22, "color": ["#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x3", "yaxis": "y3", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [22.580111, 22.579438999999997, 14.839316, 23.228938, 29.680795, 70.689808, 70.691401, 70.930255, 70.750588, 62.498656, 70.830807, 79.638842, 81.250885, 41.619994, 52.499583, 32.998593, 32.500858, 48.499874, 84.650222, 84.651401, 77.080804, 90.250255, 67.000684, 73.998806, 90.99904, 90.999343, 79.499493, 85.418842], "y": [9.032960000000001, 9.01504, 5.1417600000000006, -1.318319999999999, 23.2412, -2.595120000000003, -2.5526400000000034, -2.703200000000008, -2.6443199999999965, 6.21416, -4.138479999999997, 1.7791200000000023, 6.2736, 2.99984, 3.48888, 1.46248, 4.52288, 2.49664, -0.8540799999999994, -0.8226399999999995, -2.3885599999999965, -3.2432, -1.98176, -2.03184, -2.5256, 0.98248, 0.48648, 2.46912], "marker": {"size": 9, "opacity": 1.0, "color": ["#2f855a", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x3", "yaxis": "y3", "showlegend": false}], "layout": {"margin": {"l": 80, "r": 40, "t": 30, "b": 50}, "plot_bgcolor": "#ffffff", "paper_bgcolor": "#ffffff", "annotations": [{"x": 30.38, "y": 21.240000000000002, "xref": "x", "yref": "y", "text": "Memory Recursive Su...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 70.13, "y": -8.929999999999998, "xref": "x", "yref": "y", "text": "Python Parallel Mul...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 23.279999999999998, "y": 7.700000000000001, "xref": "x", "yref": "y", "text": "Agentic (memory-only)", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 84.72, "y": -1.85, "xref": "x", "yref": "y", "text": "Irrelevance Detection", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 70.23, "y": -1.3700000000000103, "xref": "x", "yref": "y", "text": "Python Simple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 30.38, "y": 14.149999999999997, "xref": "x2", "yref": "y2", "text": "Memory Recursive Su...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 63.2, "y": 13.1, "xref": "x2", "yref": "y2", "text": "Python Parallel AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 23.279999999999998, "y": 6.190000000000003, "xref": "x2", "yref": "y2", "text": "Agentic (memory-only)", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 70.23, "y": -4.860000000000005, "xref": "x2", "yref": "y2", "text": "Python Simple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 30.38, "y": 23.82, "xref": "x3", "yref": "y3", "text": "Memory Recursive Su...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 23.279999999999998, "y": 9.63, "xref": "x3", "yref": "y3", "text": "Agentic (memory-only)", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 70.13, "y": -4.759999999999996, "xref": "x3", "yref": "y3", "text": "Python Parallel Mul...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 89.55, "y": -3.85, "xref": "x3", "yref": "y3", "text": "Python Simple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 0.5, "y": 1.1, "xref": "x domain", "yref": "y domain", "text": "OA - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}, {"x": 0.5, "y": 1.1, "xref": "x2 domain", "yref": "y2 domain", "text": "AO - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}, {"x": 0.5, "y": 1.1, "xref": "x3 domain", "yref": "y3 domain", "text": "AA - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}], "shapes": [{"type": "line", "xref": "x", "yref": "y", "x0": 9.84, "x1": 96.0, "y0": 0, "y1": 0, "line": {"color": "rgba(0,0,0,0.18)", "width": 1, "dash": "dot"}}, {"type": "line", "xref": "x2", "yref": "y2", "x0": 9.84, "x1": 96.0, "y0": 0, "y1": 0, "line": {"color": "rgba(0,0,0,0.18)", "width": 1, "dash": "dot"}}, {"type": "line", "xref": "x3", "yref": "y3", "x0": 9.84, "x1": 96.0, "y0": 0, "y1": 0, "line": {"color": "rgba(0,0,0,0.18)", "width": 1, "dash": "dot"}}], "xaxis": {"title": "", "range": [9.84, 96.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 0.31], "anchor": "y"}, "yaxis": {"title": "Delta accuracy (pp)", "range": [-9.5, 24.5], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x"}, "xaxis2": {"title": "OO accuracy (%)", "range": [9.84, 96.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.345, 0.655], "anchor": "y2"}, "yaxis2": {"title": "", "range": [-9.5, 24.5], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x2"}, "xaxis3": {"title": "", "range": [9.84, 96.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.69, 1.0], "anchor": "y3"}, "yaxis3": {"title": "", "range": [-9.5, 24.5], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x3"}}}, {"model": "Azure gpt-5-mini (FC)", "data": [{"type": "scatter", "mode": "markers", "x": [40.219499, 40.221485, 29.6791, 39.35087, 51.608863, 59.1412, 59.138632, 59.298983, 59.351086, 56.249637, 50.000108, 89.92865300000001, 62.499799, 22.000384, 30.00147, 9.998515, 18.998641, 29.001047, 71.059937, 71.058632, 61.249193, 78.748983, 57.000342, 47.998548, 70.501032, 80.499148, 71.998812, 90.418653], "y": [1.276639999999999, 1.3295999999999992, 3.195999999999999, -3.8468000000000044, 4.4896800000000034, -0.4880000000000031, -0.5564800000000031, -2.3471200000000003, 0.1289600000000014, -6.25968, -4.1671200000000015, 1.434079999999999, -0.00536, -2.98976, -4.9608, -0.5396, -2.53624, -3.97208, -1.1216800000000045, -1.1564800000000046, -2.52152, -2.52712, -0.99088, -4.03872, 3.02752, -0.52272, -4.53168, 2.0440799999999983], "marker": {"size": 5, "opacity": 0.22, "color": ["#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x3", "yaxis": "y3", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [40.219499, 40.221485, 29.6791, 39.35087, 51.608863, 59.1412, 59.138632, 59.298983, 59.351086, 56.249637, 50.000108, 89.92865300000001, 62.499799, 22.000384, 30.00147, 9.998515, 18.998641, 29.001047, 71.059937, 71.058632, 61.249193, 78.748983, 57.000342, 47.998548, 70.501032, 80.499148, 71.998812, 90.418653], "y": [1.276639999999999, 1.3295999999999992, 3.195999999999999, -3.8468000000000044, 4.4896800000000034, -0.4880000000000031, -0.5564800000000031, -2.3471200000000003, 0.1289600000000014, -6.25968, -4.1671200000000015, 1.434079999999999, -0.00536, -2.98976, -4.9608, -0.5396, -2.53624, -3.97208, -1.1216800000000045, -1.1564800000000046, -2.52152, -2.52712, -0.99088, -4.03872, 3.02752, -0.52272, -4.53168, 2.0440799999999983], "marker": {"size": 9, "opacity": 1.0, "color": ["rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x3", "yaxis": "y3", "showlegend": false}], "layout": {"margin": {"l": 80, "r": 40, "t": 30, "b": 50}, "plot_bgcolor": "#ffffff", "paper_bgcolor": "#ffffff", "annotations": [{"x": 55.55, "y": -6.85, "xref": "x3", "yref": "y3", "text": "Python Parallel AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 29.3, "y": -5.6, "xref": "x3", "yref": "y3", "text": "Base", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 52.31, "y": 5.120000000000003, "xref": "x3", "yref": "y3", "text": "Memory Recursive Su...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 71.3, "y": -5.1, "xref": "x3", "yref": "y3", "text": "Parallel Multiple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 30.38, "y": 3.819999999999999, "xref": "x3", "yref": "y3", "text": "Memory KV", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 71.2, "y": 3.6, "xref": "x3", "yref": "y3", "text": "Multiple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 0.5, "y": 1.1, "xref": "x domain", "yref": "y domain", "text": "OA - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}, {"x": 0.5, "y": 1.1, "xref": "x2 domain", "yref": "y2 domain", "text": "AO - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}, {"x": 0.5, "y": 1.1, "xref": "x3 domain", "yref": "y3 domain", "text": "AA - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}], "shapes": [{"type": "line", "xref": "x3", "yref": "y3", "x0": 5.0, "x1": 95.42, "y0": 0, "y1": 0, "line": {"color": "rgba(0,0,0,0.18)", "width": 1, "dash": "dot"}}], "xaxis": {"title": "", "range": [5.0, 95.42], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 0.31], "anchor": "y"}, "yaxis": {"title": "Delta accuracy (pp)", "range": [-7.5, 6.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x"}, "xaxis2": {"title": "OO accuracy (%)", "range": [5.0, 95.42], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.345, 0.655], "anchor": "y2"}, "yaxis2": {"title": "", "range": [-7.5, 6.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x2"}, "xaxis3": {"title": "", "range": [5.0, 95.42], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.69, 1.0], "anchor": "y3"}, "yaxis3": {"title": "", "range": [-7.5, 6.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x3"}}}, {"model": "Azure gpt-5.1-responses (FC)", "data": [{"type": "scatter", "mode": "markers", "x": [30.970549, 30.969955, 17.421281, 23.870156, 51.610603, 63.509583, 63.509792999999995, 66.278524, 62.869811, 62.50093, 62.50054, 84.279841, 74.999877, 31.500684, 39.500822, 27.999427, 26.500117, 31.999211, 81.559124, 81.559793, 70.750021, 88.248524, 62.000327, 62.001182, 89.500813, 87.000456, 78.999862, 87.499841], "y": [5.3846400000000045, 5.368800000000005, 7.774159999999998, -4.51584, 12.926079999999997, 0.35888000000000453, 0.3644800000000045, 1.510639999999997, 0.08496000000000341, 0.024800000000000006, 0.014400000000000005, 0.10575999999999944, 6.24672, -1.601760000000001, -2.47808, -3.01528, -2.49688, 1.47896, -0.23336000000000795, -0.21552000000000796, 2.170560000000002, 0.46064, 2.00872, 4.03152, -2.47832, 0.51216, -1.00368, 0.4157600000000017], "marker": {"size": 5, "opacity": 0.22, "color": ["#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x", "yaxis": "y", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [30.970549, 30.969955, 17.421281, 23.870156, 51.610603, 63.509583, 63.509792999999995, 66.278524, 62.869811, 62.50093, 62.50054, 84.279841, 74.999877, 31.500684, 39.500822, 27.999427, 26.500117, 31.999211, 81.559124, 81.559793, 70.750021, 88.248524, 62.000327, 62.001182, 89.500813, 87.000456, 78.999862, 87.499841], "y": [5.3846400000000045, 5.368800000000005, 7.774159999999998, -4.51584, 12.926079999999997, 0.35888000000000453, 0.3644800000000045, 1.510639999999997, 0.08496000000000341, 0.024800000000000006, 0.014400000000000005, 0.10575999999999944, 6.24672, -1.601760000000001, -2.47808, -3.01528, -2.49688, 1.47896, -0.23336000000000795, -0.21552000000000796, 2.170560000000002, 0.46064, 2.00872, 4.03152, -2.47832, 0.51216, -1.00368, 0.4157600000000017], "marker": {"size": 9, "opacity": 1.0, "color": ["rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "#c43d3d", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "#c43d3d", "#c43d3d", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x", "yaxis": "y", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [30.970843, 30.970146999999997, 17.419541000000002, 23.869085000000002, 51.610972, 63.508793999999995, 63.510191999999996, 66.27928, 62.870929999999994, 62.498941, 62.499076, 84.280978, 74.999022, 31.498926, 39.500885, 28.001416, 26.500981, 32.000477, 81.559178, 81.560192, 70.750672, 88.24928, 61.999688, 62.000834, 89.498524, 87.000045, 78.999721, 87.500978], "y": [4.322480000000004, 4.303920000000004, 7.727759999999998, -4.5443999999999996, 9.705919999999999, -1.7321599999999957, -1.6948799999999957, -6.609200000000003, -0.6451999999999946, 6.22176, -0.02464, 3.4160800000000004, -0.026080000000000002, -2.27864, -3.9764, 0.53776, -1.97384, -3.48728, -2.481920000000008, -2.454880000000008, 2.687920000000002, -4.0192, 1.99168, 10.02224, -3.53936, -4.4988, -4.50744, 4.606079999999999], "marker": {"size": 5, "opacity": 0.22, "color": ["#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x2", "yaxis": "y2", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [30.970843, 30.970146999999997, 17.419541000000002, 23.869085000000002, 51.610972, 63.508793999999995, 63.510191999999996, 66.27928, 62.870929999999994, 62.498941, 62.499076, 84.280978, 74.999022, 31.498926, 39.500885, 28.001416, 26.500981, 32.000477, 81.559178, 81.560192, 70.750672, 88.24928, 61.999688, 62.000834, 89.498524, 87.000045, 78.999721, 87.500978], "y": [4.322480000000004, 4.303920000000004, 7.727759999999998, -4.5443999999999996, 9.705919999999999, -1.7321599999999957, -1.6948799999999957, -6.609200000000003, -0.6451999999999946, 6.22176, -0.02464, 3.4160800000000004, -0.026080000000000002, -2.27864, -3.9764, 0.53776, -1.97384, -3.48728, -2.481920000000008, -2.454880000000008, 2.687920000000002, -4.0192, 1.99168, 10.02224, -3.53936, -4.4988, -4.50744, 4.606079999999999], "marker": {"size": 9, "opacity": 1.0, "color": ["rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "#c43d3d", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "#c43d3d", "#c43d3d", "rgba(0,0,0,0)"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x2", "yaxis": "y2", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [30.969037, 30.969621999999998, 17.421095, 23.869958, 51.610516, 63.511308, 63.511449, 66.280483, 62.870141, 62.499247, 62.500732, 84.27997, 74.998938, 31.50147, 39.499622, 27.999262, 26.499661, 31.998761, 81.559331, 81.561449, 70.750939, 88.250483, 61.99997, 62.00066, 89.500456, 86.999112, 79.000615, 87.49997], "y": [4.914319999999997, 4.929919999999997, 3.8991999999999973, -1.9311199999999997, 12.923759999999996, -1.96512, -1.96136, -6.967120000000004, -1.0462399999999972, 6.22992, 4.189520000000002, 3.1591999999999967, -12.52832, -3.080800000000001, -3.01008, -1.51968, -4.50904, -3.53304, -2.26784, -2.21136, 0.52504, -3.48712, -3.0008, 8.0176, -1.98784, -5.02368, -2.4836, 4.579199999999998], "marker": {"size": 5, "opacity": 0.22, "color": ["#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b", "#3b4a6b"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x3", "yaxis": "y3", "showlegend": false}, {"type": "scatter", "mode": "markers", "x": [30.969037, 30.969621999999998, 17.421095, 23.869958, 51.610516, 63.511308, 63.511449, 66.280483, 62.870141, 62.499247, 62.500732, 84.27997, 74.998938, 31.50147, 39.499622, 27.999262, 26.499661, 31.998761, 81.559331, 81.561449, 70.750939, 88.250483, 61.99997, 62.00066, 89.500456, 86.999112, 79.000615, 87.49997], "y": [4.914319999999997, 4.929919999999997, 3.8991999999999973, -1.9311199999999997, 12.923759999999996, -1.96512, -1.96136, -6.967120000000004, -1.0462399999999972, 6.22992, 4.189520000000002, 3.1591999999999967, -12.52832, -3.080800000000001, -3.01008, -1.51968, -4.50904, -3.53304, -2.26784, -2.21136, 0.52504, -3.48712, -3.0008, 8.0176, -1.98784, -5.02368, -2.4836, 4.579199999999998], "marker": {"size": 9, "opacity": 1.0, "color": ["rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", "#2f855a", "rgba(0,0,0,0)", "#c43d3d", "rgba(0,0,0,0)", "rgba(0,0,0,0)"]}, "customdata": [["Agentic", "Agentic (memory-only)"], ["Agentic", "Memory Summary"], ["Agentic", "Memory KV"], ["Agentic", "Memory Vector"], ["Agentic", "Memory Recursive Summarization"], ["Live", "Live Overall Acc"], ["Live", "AST Summary"], ["Live", "Python Simple AST"], ["Live", "Python Multiple AST"], ["Live", "Python Parallel AST"], ["Live", "Python Parallel Multiple AST"], ["Live", "Irrelevance Detection"], ["Live", "Relevance Detection"], ["Multi Turn", "Multi Turn Overall Acc"], ["Multi Turn", "Base"], ["Multi Turn", "Miss Func"], ["Multi Turn", "Miss Param"], ["Multi Turn", "Long Context"], ["Non Live", "Non-Live Overall Acc"], ["Non Live", "AST Summary"], ["Non Live", "Simple AST"], ["Non Live", "Python Simple AST"], ["Non Live", "Java Simple AST"], ["Non Live", "JavaScript Simple AST"], ["Non Live", "Multiple AST"], ["Non Live", "Parallel AST"], ["Non Live", "Parallel Multiple AST"], ["Non Live", "Irrelevance Detection"]], "hovertemplate": "Category: %{customdata[0]}<br>Row: %{customdata[1]}<br>OO: %{x:.2f}<br>Delta: %{y:.2f}pp<extra></extra>", "xaxis": "x3", "yaxis": "y3", "showlegend": false}], "layout": {"margin": {"l": 80, "r": 40, "t": 30, "b": 50}, "plot_bgcolor": "#ffffff", "paper_bgcolor": "#ffffff", "annotations": [{"x": 52.31, "y": 13.509999999999996, "xref": "x", "yref": "y", "text": "Memory Recursive Su...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 18.12, "y": 8.339999999999998, "xref": "x", "yref": "y", "text": "Memory KV", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 75.7, "y": 6.85, "xref": "x", "yref": "y", "text": "Relevance Detection", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 23.17, "y": -5.119999999999999, "xref": "x", "yref": "y", "text": "Memory Vector", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 27.3, "y": -3.6, "xref": "x", "yref": "y", "text": "Miss Func", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 38.8, "y": -3.1, "xref": "x", "yref": "y", "text": "Base", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 88.8, "y": -3.1, "xref": "x", "yref": "y", "text": "Multiple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 62.7, "y": 10.6, "xref": "x2", "yref": "y2", "text": "JavaScript Simple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 52.31, "y": 10.28, "xref": "x2", "yref": "y2", "text": "Memory Recursive Su...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 18.12, "y": 8.339999999999998, "xref": "x2", "yref": "y2", "text": "Memory KV", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 65.58, "y": -7.190000000000003, "xref": "x2", "yref": "y2", "text": "Python Simple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 23.17, "y": -5.119999999999999, "xref": "x2", "yref": "y2", "text": "Memory Vector", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 86.3, "y": -5.1, "xref": "x2", "yref": "y2", "text": "Parallel AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 78.3, "y": -5.1, "xref": "x2", "yref": "y2", "text": "Parallel Multiple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 52.31, "y": 13.509999999999996, "xref": "x3", "yref": "y3", "text": "Memory Recursive Su...", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 74.3, "y": -13.1, "xref": "x3", "yref": "y3", "text": "Relevance Detection", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 62.7, "y": 8.6, "xref": "x3", "yref": "y3", "text": "JavaScript Simple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 65.58, "y": -7.580000000000004, "xref": "x3", "yref": "y3", "text": "Python Simple AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 63.2, "y": 6.85, "xref": "x3", "yref": "y3", "text": "Python Parallel AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 86.3, "y": -5.6, "xref": "x3", "yref": "y3", "text": "Parallel AST", "showarrow": false, "font": {"size": 9, "color": "#444"}, "xanchor": "center", "yanchor": "middle"}, {"x": 0.5, "y": 1.1, "xref": "x domain", "yref": "y domain", "text": "OA - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}, {"x": 0.5, "y": 1.1, "xref": "x2 domain", "yref": "y2 domain", "text": "AO - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}, {"x": 0.5, "y": 1.1, "xref": "x3 domain", "yref": "y3 domain", "text": "AA - OO", "showarrow": false, "font": {"size": 12, "color": "#333"}}], "shapes": [{"type": "line", "xref": "x", "yref": "y", "x0": 12.420000000000002, "x1": 94.5, "y0": 0, "y1": 0, "line": {"color": "rgba(0,0,0,0.18)", "width": 1, "dash": "dot"}}, {"type": "line", "xref": "x2", "yref": "y2", "x0": 12.420000000000002, "x1": 94.5, "y0": 0, "y1": 0, "line": {"color": "rgba(0,0,0,0.18)", "width": 1, "dash": "dot"}}, {"type": "line", "xref": "x3", "yref": "y3", "x0": 12.420000000000002, "x1": 94.5, "y0": 0, "y1": 0, "line": {"color": "rgba(0,0,0,0.18)", "width": 1, "dash": "dot"}}], "xaxis": {"title": "", "range": [12.420000000000002, 94.5], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 0.31], "anchor": "y"}, "yaxis": {"title": "Delta accuracy (pp)", "range": [-13.5, 14.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x"}, "xaxis2": {"title": "OO accuracy (%)", "range": [12.420000000000002, 94.5], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.345, 0.655], "anchor": "y2"}, "yaxis2": {"title": "", "range": [-13.5, 14.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x2"}, "xaxis3": {"title": "", "range": [12.420000000000002, 94.5], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.69, 1.0], "anchor": "y3"}, "yaxis3": {"title": "", "range": [-13.5, 14.0], "showgrid": true, "gridcolor": "rgba(0,0,0,0.06)", "zeroline": false, "domain": [0.0, 1.0], "anchor": "x3"}}}];
+    const thesisErrorMixContainer = document.getElementById("thesis_error_mix_plot");
+
+    function renderThesisScatterFacets() {
+      const container = document.getElementById("thesis_scatter_facets");
+      if (!container || typeof Plotly === "undefined") {
+        return;
+      }
+      container.innerHTML = "";
+      thesisScatterSpecs.forEach((spec) => {
+        const section = document.createElement("div");
+        section.className = "scatter-panel";
+        const heading = document.createElement("h2");
+        heading.textContent = spec.model || "";
+        section.appendChild(heading);
+        const plotDiv = document.createElement("div");
+        plotDiv.style.height = "360px";
+        section.appendChild(plotDiv);
+        container.appendChild(section);
+        Plotly.newPlot(plotDiv, spec.data, spec.layout, { displayModeBar: false });
+      });
+    }
+
+    function buildThesisErrorIndex() {
+      const index = {};
+      (thesisErrorRecords || []).forEach((rec) => {
+        const model = rec.model;
+        const condition = rec.condition;
+        if (!model || !condition) {
+          return;
+        }
+        if (!index[model]) {
+          index[model] = {};
+        }
+        if (!index[model][condition]) {
+          index[model][condition] = { total: 0, incorrect: 0, errorCounts: {} };
+        }
+        index[model][condition].total += rec.total || 0;
+        index[model][condition].incorrect += rec.incorrect || 0;
+        const errors = rec.errors || {};
+        Object.keys(errors).forEach((key) => {
+          index[model][condition].errorCounts[key] =
+            (index[model][condition].errorCounts[key] || 0) + (errors[key] || 0);
+        });
+      });
+      return index;
+    }
+
+    const thesisErrorIndex = buildThesisErrorIndex();
+
+    function formatGroupTitle(key) {
+      return String(key || "")
+        .replace("data_", "")
+        .replace(/_/g, " ")
+        .replace(/\w/g, (m) => m.toUpperCase());
+    }
+
+    function aggregateThesisErrors(model, condition, testCategories) {
+      let total = 0;
+      let incorrect = 0;
+      const errorCounts = {};
+      testCategories.forEach((testCategory) => {
+        const rec =
+          thesisErrorIndex[model] &&
+          thesisErrorIndex[model][condition] &&
+          thesisErrorIndex[model][condition][testCategory]
+            ? thesisErrorIndex[model][condition][testCategory]
+            : null;
+        if (!rec) {
+          return;
+        }
+        total += rec.total || 0;
+        incorrect += rec.incorrect || 0;
+        const errors = rec.errors || {};
+        Object.keys(errors).forEach((key) => {
+          errorCounts[key] = (errorCounts[key] || 0) + errors[key];
+        });
+      });
+      return { total, incorrect, errorCounts };
+    }
+
+    function renderThesisTopMovers(entries) {
+      if (!entries.length) {
+        return null;
+      }
+      const table = document.createElement("table");
+      table.className = "movers-table";
+      table.innerHTML =
+        "<thead><tr>" +
+        "<th>Subcategory</th>" +
+        "<th>Error type</th>" +
+        "<th>Delta (pp)</th>" +
+        "<th>OO rate</th>" +
+        "<th>Combo rate</th>" +
+        "<th>N all</th>" +
+        "<th>N wrong OO</th>" +
+        "<th>N wrong combo</th>" +
+        "</tr></thead>";
+      const tbody = document.createElement("tbody");
+      entries.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          `<td>${row.label}</td>` +
+          `<td>${row.errorType}</td>` +
+          `<td>${row.delta.toFixed(2)}</td>` +
+          `<td>${(row.ooRate * 100).toFixed(2)}%</td>` +
+          `<td>${(row.comboRate * 100).toFixed(2)}%</td>` +
+          `<td>${row.total}</td>` +
+          `<td>${row.ooIncorrect}</td>` +
+          `<td>${row.comboIncorrect}</td>`;
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      return table;
+    }
+
+    function updateThesisErrorHeatmap() {
+      const container = document.getElementById("thesis_error_heatmap_plot");
+      const warning = document.getElementById("thesisErrorHeatmapWarning");
+      if (!container || !warning || typeof Plotly === "undefined") {
+        return;
+      }
+      container.innerHTML = "";
+      warning.style.display = "none";
+      const comboSelect = document.getElementById("thesisErrorShiftCombo");
+      const combo = comboSelect ? comboSelect.value : "AA";
+
+      const models = Object.keys(thesisErrorIndex || {}).sort();
+      if (!models.length) {
+        warning.style.display = "";
+        warning.textContent = "No error data available for thesis heatmap.";
+        return;
+      }
+
+      models.forEach((model) => {
+        const rows = [];
+        let maxAbs = 0;
+        Object.entries(thesisErrorGroups || {}).forEach(([groupKey, group]) => {
+          const categoryTitle = formatGroupTitle(groupKey);
+          Object.entries(group || {}).forEach(([metricLabel, categories]) => {
+            if (!categories || !categories.length) {
+              return;
+            }
+            const oo = aggregateThesisErrors(model, "OO", categories);
+            const comboAgg = aggregateThesisErrors(model, combo, categories);
+            if (!oo.total || !comboAgg.total) {
+              return;
+            }
+            const row = {
+              label: metricLabel,
+              category: categoryTitle,
+              values: {},
+              maxAbs: 0,
+              total: oo.total,
+              ooIncorrect: oo.incorrect,
+              comboIncorrect: comboAgg.incorrect
+            };
+            thesisErrorTypes.forEach((errorType) => {
+              const ooRate = oo.total ? (oo.errorCounts[errorType] || 0) / oo.total : 0;
+              const comboRate = comboAgg.total
+                ? (comboAgg.errorCounts[errorType] || 0) / comboAgg.total
+                : 0;
+              const delta = (comboRate - ooRate) * 100;
+              row.values[errorType] = {
+                ooRate,
+                comboRate,
+                delta,
+                total: oo.total,
+                ooIncorrect: oo.incorrect,
+                comboIncorrect: comboAgg.incorrect
+              };
+              row.maxAbs = Math.max(row.maxAbs, Math.abs(delta));
+              maxAbs = Math.max(maxAbs, Math.abs(delta));
+            });
+            rows.push(row);
+          });
+        });
+
+        if (!rows.length) {
+          return;
+        }
+        const topRows = rows
+          .sort((a, b) => b.maxAbs - a.maxAbs)
+          .slice(0, thesisTopRows);
+        if (!maxAbs) {
+          maxAbs = 0.1;
+        }
+        const xLabels = thesisErrorTypes.slice();
+        const yLabels = topRows.map((row) => row.label);
+        const z = topRows.map((row) =>
+          xLabels.map((errorType) => row.values[errorType].delta)
+        );
+        const custom = topRows.map((row) =>
+          xLabels.map((errorType) => ({
+            label: row.label,
+            category: row.category,
+            errorType,
+            ooRate: row.values[errorType].ooRate,
+            comboRate: row.values[errorType].comboRate,
+            delta: row.values[errorType].delta,
+            total: row.values[errorType].total,
+            ooIncorrect: row.values[errorType].ooIncorrect,
+            comboIncorrect: row.values[errorType].comboIncorrect
+          }))
+        );
+
+        const section = document.createElement("div");
+        section.className = "section";
+        const heading = document.createElement("h2");
+        heading.textContent = model;
+        section.appendChild(heading);
+        const plotDiv = document.createElement("div");
+        plotDiv.style.height = "480px";
+        section.appendChild(plotDiv);
+        const tableWrap = document.createElement("div");
+        container.appendChild(section);
+
+        const trace = {
+          type: "heatmap",
+          z,
+          x: xLabels,
+          y: yLabels,
+          zmid: 0,
+          zmin: -maxAbs,
+          zmax: maxAbs,
+          customdata: custom,
+          hovertemplate:
+            "Row: %{customdata.label}<br>" +
+            "Category: %{customdata.category}<br>" +
+            "Error: %{customdata.errorType}<br>" +
+            "OO rate: %{customdata.ooRate:.2%}<br>" +
+            "Combo rate: %{customdata.comboRate:.2%}<br>" +
+            "Delta: %{customdata.delta:+.2f}pp<br>" +
+            "N: %{customdata.total}<extra></extra>"
+        };
+        const layout = {
+          margin: { t: 20, l: 140, r: 20, b: 120 },
+          xaxis: { tickangle: -30 },
+          yaxis: { automargin: true }
+        };
+        Plotly.newPlot(plotDiv, [trace], layout, { displayModeBar: false });
+
+        const movers = [];
+        topRows.forEach((row) => {
+          thesisErrorTypes.forEach((errorType) => {
+            const cell = row.values[errorType];
+            if (!cell) {
+              return;
+            }
+            movers.push({
+              label: row.label,
+              errorType,
+              delta: cell.delta,
+              ooRate: cell.ooRate,
+              comboRate: cell.comboRate,
+              total: cell.total,
+              ooIncorrect: row.ooIncorrect,
+              comboIncorrect: row.comboIncorrect
+            });
+          });
+        });
+        movers.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+        const moversTable = renderThesisTopMovers(movers.slice(0, thesisTopMovers));
+        if (moversTable) {
+          tableWrap.appendChild(moversTable);
+          section.appendChild(tableWrap);
+        }
+      });
+    }
+
+    function updateThesisErrorMix() {
+      if (!thesisErrorMixContainer || typeof Plotly === "undefined") {
+        return;
+      }
+      thesisErrorMixContainer.innerHTML = "";
+      const models = Object.keys(thesisErrorIndex || {}).sort();
+      models.forEach((model) => {
+        const conditions = ["OO", "OA", "AO", "AA"].filter(
+          (condition) => thesisErrorIndex[model] && thesisErrorIndex[model][condition]
+        );
+        if (!conditions.length) {
+          return;
+        }
+        if (!conditions.includes("OO")) {
+          return;
+        }
+        const avgShares = thesisErrorTypes.map((errorType) => {
+          let totalShare = 0;
+          let count = 0;
+          conditions.forEach((condition) => {
+            const agg = thesisErrorIndex[model][condition];
+            const share = agg.incorrect
+              ? (agg.errorCounts[errorType] || 0) / agg.incorrect
+              : 0;
+            totalShare += share;
+            count += 1;
+          });
+          return { errorType, avgShare: count ? totalShare / count : 0 };
+        });
+        const topErrors = avgShares
+          .filter((row) => row.errorType !== "OTHER")
+          .sort((a, b) => b.avgShare - a.avgShare)
+          .slice(0, 5)
+          .map((row) => row.errorType);
+        const orderedErrors = topErrors.concat("OTHER");
+        console.log("Thesis error mix labels:", orderedErrors);
+
+        const traces = orderedErrors.map((errorType) => {
+          const y = [];
+          const custom = [];
+          conditions.forEach((condition) => {
+            const agg = thesisErrorIndex[model][condition];
+            let count = 0;
+            if (errorType === "OTHER") {
+              count = agg.errorCounts["OTHER"] || 0;
+            } else {
+              count = agg.errorCounts[errorType] || 0;
+            }
+            const rawShare = agg.incorrect ? count / agg.incorrect : 0;
+            custom.push({
+              errorType,
+              count,
+              share: rawShare,
+              incorrect: agg.incorrect
+            });
+            y.push(rawShare);
+          });
+          return {
+            name: errorType,
+            type: "bar",
+            x: conditions,
+            y,
+            customdata: custom,
+            hovertemplate:
+              "Error: %{customdata.errorType}<br>" +
+              "Count: %{customdata.count}<br>" +
+              "Share: %{customdata.share:.2%}<br>" +
+              "Total incorrect: %{customdata.incorrect}<extra></extra>"
+          };
+        });
+        const totalsByCondition = conditions.map((condition) => {
+          let totalShare = 0;
+          traces.forEach((trace) => {
+            const idx = trace.x.indexOf(condition);
+            if (idx >= 0) {
+              totalShare += trace.y[idx] || 0;
+            }
+          });
+          return totalShare;
+        });
+        traces.forEach((trace) => {
+          trace.y = trace.y.map((val, idx) => {
+            const denom = totalsByCondition[idx] || 1;
+            return denom ? val / denom : 0;
+          });
+        });
+
+        const annotations = conditions.map((condition, idx) => ({
+          x: condition,
+          y: 1.04,
+          text: "n=" + (thesisErrorIndex[model][condition].incorrect || 0),
+          showarrow: false,
+          yref: "y",
+          xref: "x",
+          font: { size: 11, color: "#444" }
+        }));
+
+        const section = document.createElement("div");
+        section.className = "section";
+        const heading = document.createElement("h2");
+        heading.textContent = model;
+        section.appendChild(heading);
+        const plotDiv = document.createElement("div");
+        plotDiv.style.height = "360px";
+        section.appendChild(plotDiv);
+        thesisErrorMixContainer.appendChild(section);
+
+        const layout = {
+          barmode: "stack",
+          margin: { t: 60, l: 60, r: 20, b: 40 },
+          yaxis: {
+            title: "Share of incorrect",
+            tickformat: ".0%",
+            range: [0, 1.08]
+          },
+          annotations
+        };
+        Plotly.newPlot(plotDiv, traces, layout, { displayModeBar: false });
+      });
+    }
+
+    function updateThesisErrorShifts() {
+      const combo = document.getElementById("thesisErrorShiftCombo").value;
+      const container = document.getElementById("thesis_error_shift_plot");
+      const warning = document.getElementById("thesisErrorShiftWarning");
+      if (!container || !warning || typeof Plotly === "undefined") {
+        return;
+      }
+      container.innerHTML = "";
+      const models = Object.keys(thesisErrorIndex || {}).sort();
+      let movers = 0;
+      let plotted = 0;
+      models.forEach((model) => {
+        const oo = thesisErrorIndex[model] ? thesisErrorIndex[model]["OO"] : null;
+        const comboAgg = thesisErrorIndex[model] ? thesisErrorIndex[model][combo] : null;
+        if (!oo || !comboAgg || !oo.total || !comboAgg.total) {
+          return;
+        }
+        const deltas = thesisErrorTypes.map((errorType) => {
+          const ooRate = oo.total ? (oo.errorCounts[errorType] || 0) / oo.total : 0;
+          const comboRate = comboAgg.total
+            ? (comboAgg.errorCounts[errorType] || 0) / comboAgg.total
+            : 0;
+          return {
+            errorType,
+            delta: (comboRate - ooRate) * 100
+          };
+        });
+        const selected = deltas
+          .filter((row) => Math.abs(row.delta) > 0.1)
+          .sort((a, b) => a.delta - b.delta);
+        if (!selected.length) {
+          return;
+        }
+        movers += selected.length;
+        plotted += 1;
+
+        const y = selected.map((row) => row.errorType);
+        const x = selected.map((row) => row.delta);
+        const colors = x.map((val) => (val >= 0 ? "#2f855a" : "#c43d3d"));
+        const text = x.map((val) => `${val >= 0 ? "+" : ""}${val.toFixed(1)}pp`);
+        const trace = {
+          type: "bar",
+          orientation: "h",
+          x,
+          y,
+          marker: { color: colors },
+          text,
+          textposition: "outside",
+          cliponaxis: false,
+          hovertemplate: "Error: %{y}<br>Delta %{x:+.2f}pp<extra></extra>"
+        };
+
+        const section = document.createElement("div");
+        section.className = "section";
+        const heading = document.createElement("h2");
+        heading.textContent = model;
+        section.appendChild(heading);
+        const plotDiv = document.createElement("div");
+        plotDiv.style.height = "320px";
+        section.appendChild(plotDiv);
+        container.appendChild(section);
+
+        const minX = Math.min(...x);
+        const maxX = Math.max(...x);
+        const pad = Math.max(0.6, (Math.abs(minX) + Math.abs(maxX)) * 0.08);
+        const layout = {
+          margin: { t: 20, l: 200, r: 40, b: 40 },
+          xaxis: {
+            title: "Delta error rate (pp)",
+            zeroline: true,
+            zerolinecolor: "rgba(0,0,0,0.35)",
+            showgrid: true,
+            gridcolor: "rgba(0,0,0,0.08)",
+            range: [minX - pad, maxX + pad]
+          },
+          yaxis: {
+            automargin: true,
+            showgrid: false
+          }
+        };
+        Plotly.newPlot(plotDiv, [trace], layout, { displayModeBar: false });
+      });
+
+      if (!container.childNodes.length) {
+        warning.style.display = "";
+        warning.textContent = "No error data for the current selection.";
+      } else {
+        warning.style.display = "none";
+      }
+      console.log("[thesis error shifts]", {
+        combo,
+        errorTypes: thesisErrorTypes.length,
+        models: plotted,
+        movers
+      });
+    }
+
+    document.getElementById("thesisErrorShiftCombo").addEventListener("change", () => {
+      updateThesisErrorShifts();
+      updateThesisErrorHeatmap();
+    });
+    updateThesisErrorShifts();
+    updateThesisErrorHeatmap();
+    updateThesisErrorMix();
+    renderThesisScatterFacets();
+  </script>
+</body>
+</html>

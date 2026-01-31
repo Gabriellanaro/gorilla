@@ -1,5 +1,6 @@
 import argparse
 import csv
+import json
 import os
 import re
 from collections import defaultdict
@@ -59,7 +60,8 @@ def iter_result_json_files(root: str) -> list[str]:
         if not in_results and not in_result_desc:
             continue
         for fn in filenames:
-            if fn.lower().endswith(".json"):
+            lower = fn.lower()
+            if lower.endswith(".json") or lower.endswith(".jsonl"):
                 files.append(os.path.join(dirpath, fn))
     return files
 
@@ -264,10 +266,16 @@ def main() -> int:
         default="error_summary.json",
         help="JSON output path (default: error_summary.json).",
     )
-    parser.add_argument(
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument(
         "--by-folder",
         action="store_true",
-        help="Summarize by top-level folder instead of folder+file.",
+        help="Summarize by top-level folder instead of file path.",
+    )
+    mode_group.add_argument(
+        "--by-file",
+        action="store_true",
+        help="Summarize by file path (default).",
     )
     args = parser.parse_args()
 
@@ -282,8 +290,7 @@ def main() -> int:
         write_json(folder_summary, args.json_out)
     else:
         write_csv_with_file(file_summary, args.out, file_ids)
-        # Keep JSON at folder summary level by default.
-        write_json(folder_summary, args.json_out)
+        write_json_with_file(file_summary, args.json_out)
     print(f"Wrote {args.out}")
     print(f"Wrote {args.json_out}")
     return 0

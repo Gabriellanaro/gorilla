@@ -1,1 +1,708 @@
-{}
+[
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_web_search_base_result.json",
+    "errors": {
+      "Error code 400 context_window": 2,
+      "Error code 400 output_too_long": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_web_search_no_snippet_result.json",
+    "errors": {
+      "Error code 400 context_window": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 6
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 39
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 39
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Failed to invoke the Azure CLI": 1,
+      "Error code 400 content_filter": 39,
+      "Connection error": 4
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 34
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_web_search_no_snippet_result.json",
+    "errors": {
+      "Error code 400 context_window": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 8
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43,
+      "Connection error": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_web_search_base_result.json",
+    "errors": {
+      "Error code 400 context_window": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 8
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43,
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_augmented",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_web_search_base_result.json",
+    "errors": {
+      "Error code 400 context_window": 6
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_web_search_no_snippet_result.json",
+    "errors": {
+      "Error code 400 context_window": 5
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_memory_rec_sum_prereq_result.json",
+    "errors": {
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 7
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 3
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 8
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_augmented_name_original",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_web_search_base_result.json",
+    "errors": {
+      "Error code 400 context_window": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_web_search_no_snippet_result.json",
+    "errors": {
+      "Error code 400 context_window": 4
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_memory_rec_sum_prereq_result.json",
+    "errors": {
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 8
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_web_search_no_snippet_result.json",
+    "errors": {
+      "Error code 500 InternalServerError": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_memory_kv_prereq_result.json",
+    "errors": {
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_memory_kv_prereq_result.json",
+    "errors": {
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 8
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_original_name_augmented",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_web_search_base_result.json",
+    "errors": {
+      "Error code 400 context_window": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_web_search_no_snippet_result.json",
+    "errors": {
+      "Error code 400 output_too_long": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_memory_rec_sum_prereq_result.json",
+    "errors": {
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 8
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_memory_rec_sum_prereq_result.json",
+    "errors": {
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_memory_vector_prereq_result.json",
+    "errors": {
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 8
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43,
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_memory_vector_prereq_result.json",
+    "errors": {
+      "Error code 400 no_tool_output": 1
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_memory_vector_result.json",
+    "errors": {
+      "Error code 404 other": 155
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_irrelevance_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_multiple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 8
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_live_simple_result.json",
+    "errors": {
+      "Error code 400 content_filter": 2
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_base_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_long_context_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_miss_func_result.json",
+    "errors": {
+      "Error code 400 content_filter": 43
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_multi_turn_miss_param_result.json",
+    "errors": {
+      "Error code 400 content_filter": 37
+    }
+  },
+  {
+    "folder": "result_desc_original_name_original",
+    "file": "BFCL_v4_simple_python_result.json",
+    "errors": {
+      "Error code 400 content_filter": 1
+    }
+  }
+]
