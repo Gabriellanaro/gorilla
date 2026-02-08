@@ -66,3 +66,7 @@ berkeley-function-call-leaderboard/comparison_out/README.md
 /berkeley-function-call-leaderboard/comparison_out
 /berkeley-function-call-leaderboard/analysis_out_old
 /berkeley-function-call-leaderboard/figures
+/berkeley-function-call-leaderboard/analysis
+berkeley-function-call-leaderboard/make_leaderboard.py
+berkeley-function-call-leaderboard/leaderboard.html
+berkeley-function-call-leaderboard/scripts/make_leaderboard.py
